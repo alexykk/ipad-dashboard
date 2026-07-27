@@ -1,398 +1,203 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>iPad Dashboard - News & Score Bar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5-Day Weather Forecast</title>
   <style>
-    /* Reset & Base Layout */
-    * { box-sizing: border-box; }
-    body {
-      background-color: #0d0e12;
-      color: #ffffff;
-      font-family: -apple-system, "PingFang HK", "Helvetica Neue", Arial, sans-serif;
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-color: #f8fafc;
+      --accent-color: #38bdf8;
+      --muted-color: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
-      padding: 14px;
-      overflow: hidden;
-      height: 100vh;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    /* Grid Layout */
-    .dashboard {
-      display: table;
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
       width: 100%;
-      height: 100%;
-      table-layout: fixed;
-    }
-    .col {
-      display: table-cell;
-      vertical-align: top;
-      padding: 0 6px;
-    }
-    .col-left { width: 46%; }
-    .col-right { width: 54%; }
-
-    /* Card Containers */
-    .card {
-      background: #181a20;
-      border: 1px solid #262933;
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 12px;
+      max-width: 800px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
     }
 
-    /* Section Headers */
-    .section-title {
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #6e768e;
+    header {
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.8rem;
       margin-bottom: 8px;
     }
 
-    /* Clock Styling */
-    #clock {
-      font-size: 64px;
-      font-weight: 700;
-      letter-spacing: -2px;
-      color: #ffffff;
-      line-height: 1;
-    }
-    #date {
-      font-size: 16px;
-      color: #8c95b0;
-      margin-top: 6px;
-      font-weight: 500;
+    .subtitle {
+      color: var(--muted-color);
+      font-size: 0.95rem;
     }
 
-    /* SCORE / MARKET TICKER BAR */
-    .score-bar {
-      display: table;
-      width: 100%;
-      background: #12141a;
-      border-radius: 10px;
-      padding: 10px 12px;
-      border: 1px solid #262933;
-      margin-top: 10px;
+    .forecast-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 16px;
     }
-    .score-item {
-      display: table-cell;
+
+    .day-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 16px;
       text-align: center;
-      width: 50%;
-      vertical-align: middle;
-    }
-    .score-item:first-child {
-      border-right: 1px solid #262933;
-    }
-    .score-title {
-      font-size: 11px;
-      color: #8c95b0;
-      text-transform: uppercase;
-    }
-    .score-value {
-      font-size: 16px;
-      font-weight: 700;
-      margin-top: 2px;
-      color: #34c759; /* Green accent */
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.2s ease;
     }
 
-    /* Weather Elements */
-    .weather-current-row { display: table; width: 100%; }
-    .weather-current-cell { display: table-cell; vertical-align: middle; }
-    .temp-large {
-      font-size: 48px;
-      font-weight: 300;
-      color: #4c9eff;
-      line-height: 1;
+    .day-card:hover {
+      transform: translateY(-4px);
     }
-    .weather-icon-large {
-      width: 56px;
-      height: 56px;
-      vertical-align: middle;
-    }
-    .weather-meta { font-size: 12px; color: #8c95b0; margin-top: 4px; }
 
-    /* 3-Day Forecast Strip */
-    .forecast-row {
-      display: table;
-      width: 100%;
-      margin-top: 10px;
-      border-top: 1px solid #262933;
-      padding-top: 8px;
+    .day-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 4px;
     }
-    .forecast-day { display: table-cell; text-align: center; width: 33.33%; }
-    .forecast-name { font-size: 12px; color: #8c95b0; }
-    .forecast-icon { width: 32px; height: 32px; display: block; margin: 0 auto; }
-    .forecast-temp { font-size: 14px; font-weight: 600; color: #ffffff; }
 
-    /* SCROLLABLE NEWS FEED CONTAINER */
-    .news-card {
-      height: calc(100vh - 44px);
+    .day-date {
+      font-size: 0.8rem;
+      color: var(--muted-color);
+      margin-bottom: 12px;
+    }
+
+    .weather-icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+    }
+
+    .temp-range {
       display: flex;
-      flex-direction: column;
-    }
-    .news-scroll-area {
-      height: calc(100vh - 90px);
-      overflow-y: scroll; /* Enables smooth touch scrolling on iOS */
-      -webkit-overflow-scrolling: touch; 
-      padding-right: 4px;
+      justify-content: space-around;
+      font-size: 0.95rem;
     }
 
-    .news-item {
-      display: table;
-      width: 100%;
-      border-bottom: 1px solid #262933;
-      padding: 10px 0;
-      table-layout: fixed;
+    .temp-max {
+      font-weight: bold;
+      color: var(--accent-color);
     }
-    .news-item:last-child { border-bottom: none; }
-    .news-thumb-cell { display: table-cell; width: 72px; vertical-align: top; }
-    .news-thumb {
-      width: 64px;
-      height: 46px;
-      border-radius: 6px;
-      background-color: #262933;
-      background-size: cover;
-      background-position: center;
+
+    .temp-min {
+      color: var(--muted-color);
     }
-    .news-text-cell { display: table-cell; vertical-align: top; padding-left: 8px; }
-    .news-title {
-      font-size: 14px;
-      line-height: 1.35;
-      color: #e1e4ed;
-      font-weight: 500;
+
+    .loading, .error {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted-color);
     }
   </style>
 </head>
 <body>
 
-  <div class="dashboard">
-    <!-- LEFT COLUMN: Clock, Score Bar & Weather -->
-    <div class="col col-left">
-      <!-- Clock & Date Card -->
-      <div class="card">
-        <div id="clock">00:00</div>
-        <div id="date">更新中...</div>
-        
-        <!-- Score / Market Bar -->
-        <div class="score-bar">
-          <div class="score-item">
-            <div class="score-title">恒生指數 HSI</div>
-            <div class="score-value" id="hsi-val">載入中...</div>
-          </div>
-          <div class="score-item">
-            <div class="score-title">標普500 S&P500</div>
-            <div class="score-value" id="spx-val">載入中...</div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Weather Card -->
-      <div class="card">
-        <div class="section-title">天氣預報</div>
-        <div class="weather-current-row">
-          <div class="weather-current-cell" style="width: 45%;">
-            <div class="temp-large" id="current-temp">--°C</div>
-          </div>
-          <div class="weather-current-cell" style="width: 55%; text-align: right;">
-            <img id="current-weather-icon" class="weather-icon-large" src="" alt="" style="display:none;" />
-            <div id="weather-condition" style="font-size: 16px; font-weight: 600; margin-top: 2px;">載入中...</div>
-            <div class="weather-meta" id="weather-details">風速: --</div>
-          </div>
-        </div>
+  <div class="container">
+    <header>
+      <h1 id="location-name">Loading location...</h1>
+      <p class="subtitle">5-Day Weather Forecast</p>
+    </header>
 
-        <!-- 3-Day Forecast Strip -->
-        <div class="forecast-row" id="forecast-container">
-          <div class="forecast-day"><div class="forecast-name">--</div><div class="forecast-temp">--°</div></div>
-          <div class="forecast-day"><div class="forecast-name">--</div><div class="forecast-temp">--°</div></div>
-          <div class="forecast-day"><div class="forecast-name">--</div><div class="forecast-temp">--°</div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT COLUMN: Scrollable Yahoo HK News -->
-    <div class="col col-right">
-      <div class="card news-card">
-        <div class="section-title">Yahoo 新聞 (香港即時頭條)</div>
-        <div class="news-scroll-area" id="news-container">
-          <div style="color:#8c95b0; padding:10px 0;">載入雅虎新聞...</div>
-        </div>
-      </div>
+    <div id="forecast" class="forecast-grid">
+      <div class="loading">Fetching forecast data...</div>
     </div>
   </div>
 
   <script>
-    // 1. Clock & Date
-    function updateClock() {
-      var now = new Date();
-      var hours = (now.getHours() < 10 ? '0' : '') + now.getHours();
-      var minutes = (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
-      document.getElementById('clock').innerHTML = hours + ':' + minutes;
+    // Configuration: Set location coordinates (Default: Tokyo / Change to your target location)
+    const LATITUDE = 35.6762;
+    const LONGITUDE = 139.6503;
+    const LOCATION_LABEL = "Tokyo";
+
+    // Open-Meteo WMO Weather Code to Icon mapping
+    function getWeatherDetails(code) {
+      if (code === 0) return { icon: "☀️", desc: "Clear sky" };
+      if (code >= 1 && code <= 3) return { icon: "⛅", desc: "Partly cloudy" };
+      if (code >= 45 && code <= 48) return { icon: "🌫️", desc: "Foggy" };
+      if (code >= 51 && code <= 67) return { icon: "🌧️", desc: "Rain / Drizzle" };
+      if (code >= 71 && code <= 77) return { icon: "❄️", desc: "Snow" };
+      if (code >= 80 && code <= 82) return { icon: "🌦️", desc: "Showers" };
+      if (code >= 95) return { icon: "🌩️", desc: "Thunderstorm" };
+      return { icon: "🌡️", desc: "Unknown" };
+    }
+
+    // Helper to format date strings (YYYY-MM-DD) into Day name and short date
+    function formatDate(dateStr) {
+      const date = new Date(dateStr + "T00:00:00");
+      const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
+      const monthDay = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      return { dayName, monthDay };
+    }
+
+    async function fetch5DayForecast() {
+      const forecastEl = document.getElementById("forecast");
+      const locationEl = document.getElementById("location-name");
       
-      var days = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
-      var month = now.getMonth() + 1;
-      var date = now.getDate();
-      document.getElementById('date').innerHTML = month + "月" + date + "日 " + days[now.getDay()];
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
+      locationEl.textContent = LOCATION_LABEL;
 
-    // 2. Score / Stock Market Fetcher (ES5 Compatible)
-    function fetchScores() {
-      // Free financial API endpoint
-      var url = "https://query1.finance.yahoo.com/v7/finance/quote?symbols=^HSI,^GSPC";
-      
-      // Proxy workaround for iOS 9 CORS
-      var proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
+      // API Request requesting 5 forecast days and daily parameters
+      const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5`;
 
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", proxyUrl, true);
-      xhr.onload = function() {
-        if (xhr.status === 200) {
-          try {
-            var data = JSON.parse(xhr.responseText);
-            var results = data.quoteResponse.result;
-            for (var i = 0; i < results.length; i++) {
-              var item = results[i];
-              var price = item.regularMarketPrice ? item.regularMarketPrice.toFixed(0) : "--";
-              var change = item.regularMarketChangePercent ? item.regularMarketChangePercent.toFixed(2) : "0";
-              var sign = change >= 0 ? "+" : "";
-              var color = change >= 0 ? "#34c759" : "#ff3b30";
-              
-              if (item.symbol === "^HSI") {
-                document.getElementById('hsi-val').innerHTML = price + ' <span style="font-size:12px; color:'+color+';">' + sign + change + '%</span>';
-              } else if (item.symbol === "^GSPC") {
-                document.getElementById('spx-val').innerHTML = price + ' <span style="font-size:12px; color:'+color+';">' + sign + change + '%</span>';
-              }
-            }
-          } catch(e) {
-            document.getElementById('hsi-val').innerHTML = "18,000";
-            document.getElementById('spx-val').innerHTML = "5,500";
-          }
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error("Failed to fetch weather data");
+        
+        const data = await response.json();
+        const daily = data.daily;
+
+        // Clear existing loading indicator
+        forecastEl.innerHTML = "";
+
+        // Loop through the 5 days returned
+        for (let i = 0; i < daily.time.length; i++) {
+          const { dayName, monthDay } = formatDate(daily.time[i]);
+          const weather = getWeatherDetails(daily.weathercode[i]);
+          const maxTemp = Math.round(daily.temperature_2m_max[i]);
+          const minTemp = Math.round(daily.temperature_2m_min[i]);
+
+          const card = document.createElement("div");
+          card.className = "day-card";
+          card.innerHTML = `
+            <div class="day-name">${i === 0 ? "Today" : dayName}</div>
+            <div class="day-date">${monthDay}</div>
+            <div class="weather-icon" title="${weather.desc}">${weather.icon}</div>
+            <div class="temp-range">
+              <span class="temp-max">${maxTemp}°C</span>
+              <span class="temp-min">${minTemp}°C</span>
+            </div>
+          `;
+          forecastEl.appendChild(card);
         }
-      };
-      xhr.onerror = function() {
-        document.getElementById('hsi-val').innerHTML = "--";
-        document.getElementById('spx-val').innerHTML = "--";
-      };
-      xhr.send();
-    }
-    fetchScores();
-    setInterval(fetchScores, 300000); // 5 mins
-
-    // Weather Helper
-    function getWeatherInfo(code) {
-      var iconBase = "https://openweathermap.org/img/wn/";
-      if (code === 0) return { desc: "晴朗", icon: iconBase + "01d@2x.png" };
-      if (code >= 1 && code <= 2) return { desc: "部分時間有陽光", icon: iconBase + "02d@2x.png" };
-      if (code === 3) return { desc: "多雲", icon: iconBase + "04d@2x.png" };
-      if (code >= 45 && code <= 48) return { desc: "有霧", icon: iconBase + "50d@2x.png" };
-      if (code >= 51 && code <= 67) return { desc: "微雨", icon: iconBase + "10d@2x.png" };
-      if (code >= 71 && code <= 77) return { desc: "有雪", icon: iconBase + "13d@2x.png" };
-      if (code >= 80 && code <= 82) return { desc: "大雨", icon: iconBase + "09d@2x.png" };
-      if (code >= 95) return { desc: "雷暴", icon: iconBase + "11d@2x.png" };
-      return { desc: "多雲", icon: iconBase + "03d@2x.png" };
-    }
-
-    // 3. Weather Fetcher (Hong Kong: 22.3193, 114.1694)
-    function fetchWeather() {
-      var lat = "22.3193";
-      var lon = "114.1694";
-      var url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FHong_Kong";
-
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", url, true);
-      xhr.onload = function() {
-        if (xhr.status === 200) {
-          var data = JSON.parse(xhr.responseText);
-          var currentInfo = getWeatherInfo(data.current_weather.weathercode);
-          
-          document.getElementById('current-temp').innerHTML = Math.round(data.current_weather.temperature) + "°C";
-          document.getElementById('weather-condition').innerHTML = currentInfo.desc;
-          
-          var currentIconImg = document.getElementById('current-weather-icon');
-          currentIconImg.src = currentInfo.icon;
-          currentIconImg.style.display = "inline-block";
-          
-          document.getElementById('weather-details').innerHTML = "風速: " + Math.round(data.current_weather.windspeed) + " km/h";
-
-          // 3-Day Forecast Strip
-          var forecastHTML = "";
-          var days = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
-          for (var i = 1; i <= 3; i++) {
-            var dateObj = new Date(data.daily.time[i]);
-            var dayName = days[dateObj.getDay()];
-            var maxTemp = Math.round(data.daily.temperature_2m_max[i]);
-            var minTemp = Math.round(data.daily.temperature_2m_min[i]);
-            var dayInfo = getWeatherInfo(data.daily.weathercode[i]);
-            
-            forecastHTML += '<div class="forecast-day">';
-            forecastHTML += '<div class="forecast-name">' + dayName + '</div>';
-            forecastHTML += '<img class="forecast-icon" src="' + dayInfo.icon + '" alt="" />';
-            forecastHTML += '<div class="forecast-temp">' + maxTemp + '° <span style="color:#6e768e; font-weight:normal;">' + minTemp + '°</span></div>';
-            forecastHTML += '</div>';
-          }
-          document.getElementById('forecast-container').innerHTML = forecastHTML;
-        }
-      };
-      xhr.send();
-    }
-    fetchWeather();
-    setInterval(fetchWeather, 600000); // 10 mins
-
-    // Helper: Extract Thumbnail
-    function extractImageUrl(item) {
-      if (item.thumbnail && item.thumbnail !== "") return item.thumbnail;
-      if (item.enclosure && item.enclosure.link) return item.enclosure.link;
-      if (item.description) {
-        var match = item.description.match(/<img[^>]+src=["']([^"']+)["']/i);
-        if (match && match[1]) return match[1];
+      } catch (err) {
+        forecastEl.innerHTML = `<div class="error">Error loading forecast. Please try again.</div>`;
+        console.error(err);
       }
-      return null;
     }
 
-    // 4. Yahoo News Fetcher (15 Items, Scrollable Container)
-    function fetchNews() {
-      var yahooHkRss = "https://hk.news.yahoo.com/rss/hong-kong";
-      var url = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(yahooHkRss);
-
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", url, true);
-      xhr.onload = function() {
-        if (xhr.status === 200) {
-          var data = JSON.parse(xhr.responseText);
-          if (data.items && data.items.length > 0) {
-            var output = "";
-            var items = data.items.slice(0, 15); // Expanded to 15 news items
-            
-            for (var i = 0; i < items.length; i++) {
-              var imgUrl = extractImageUrl(items[i]);
-              
-              output += '<div class="news-item">';
-              if (imgUrl) {
-                output += '<div class="news-thumb-cell">';
-                output += '<div class="news-thumb" style="background-image: url(\'' + imgUrl + '\');"></div>';
-                output += '</div>';
-              }
-              output += '<div class="news-text-cell">';
-              output += '<div class="news-title">' + items[i].title + '</div>';
-              output += '</div>';
-              output += '</div>';
-            }
-            document.getElementById('news-container').innerHTML = output;
-          } else {
-            document.getElementById('news-container').innerHTML = "無法載入新聞。";
-          }
-        }
-      };
-      xhr.onerror = function() {
-        document.getElementById('news-container').innerHTML = "新聞連線失敗。";
-      };
-      xhr.send();
-    }
-    fetchNews();
-    setInterval(fetchNews, 1800000); // 30 mins
+    // Initialize forecast load
+    fetch5DayForecast();
   </script>
 </body>
 </html>
