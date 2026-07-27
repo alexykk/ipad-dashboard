@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>iPad Dashboard - Yahoo HK News</title>
+  <title>iPad Dashboard - Yahoo HK News with Images</title>
   <style>
     /* Reset & Base Layout */
     * { box-sizing: border-box; }
@@ -29,15 +29,15 @@
       vertical-align: top;
       padding: 0 8px;
     }
-    .col-left { width: 50%; }
-    .col-right { width: 50%; }
+    .col-left { width: 48%; }
+    .col-right { width: 52%; }
 
     /* Card Containers */
     .card {
       background: #181a20;
       border: 1px solid #262933;
       border-radius: 16px;
-      padding: 20px;
+      padding: 18px;
       margin-bottom: 16px;
     }
 
@@ -53,7 +53,7 @@
 
     /* Clock Styling */
     #clock {
-      font-size: 72px;
+      font-size: 68px;
       font-weight: 700;
       letter-spacing: -2px;
       color: #ffffff;
@@ -66,24 +66,37 @@
       font-weight: 500;
     }
 
-    /* Weather Styling */
+    /* Weather Elements */
+    .weather-current-row {
+      display: table;
+      width: 100%;
+    }
+    .weather-current-cell {
+      display: table-cell;
+      vertical-align: middle;
+    }
     .temp-large {
-      font-size: 56px;
+      font-size: 52px;
       font-weight: 300;
       color: #4c9eff;
       line-height: 1;
     }
+    .weather-icon-large {
+      width: 64px;
+      height: 64px;
+      vertical-align: middle;
+    }
     .weather-meta {
-      font-size: 14px;
+      font-size: 13px;
       color: #8c95b0;
-      margin-top: 10px;
+      margin-top: 6px;
     }
 
     /* 3-Day Forecast Strip */
     .forecast-row {
       display: table;
       width: 100%;
-      margin-top: 16px;
+      margin-top: 14px;
       border-top: 1px solid #262933;
       padding-top: 12px;
     }
@@ -95,27 +108,57 @@
     .forecast-name {
       font-size: 13px;
       color: #8c95b0;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
+    }
+    .forecast-icon {
+      width: 36px;
+      height: 36px;
+      display: block;
+      margin: 0 auto 2px auto;
     }
     .forecast-temp {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
       color: #ffffff;
     }
 
-    /* News Feed Layout */
+    /* News Feed Layout with Thumbnails */
     .news-item {
+      display: table;
+      width: 100%;
       border-bottom: 1px solid #262933;
-      padding: 12px 0;
+      padding: 10px 0;
+      table-layout: fixed;
     }
     .news-item:last-child {
       border-bottom: none;
     }
+    .news-thumb-cell {
+      display: table-cell;
+      width: 76px;
+      vertical-align: top;
+    }
+    .news-thumb {
+      width: 68px;
+      height: 48px;
+      border-radius: 6px;
+      background-color: #262933;
+      background-size: cover;
+      background-position: center;
+    }
+    .news-text-cell {
+      display: table-cell;
+      vertical-align: top;
+      padding-left: 8px;
+    }
     .news-title {
-      font-size: 15px;
-      line-height: 1.4;
+      font-size: 14px;
+      line-height: 1.35;
       color: #e1e4ed;
       font-weight: 500;
+      /* Max 2 lines clamp fallback */
+      max-height: 38px;
+      overflow: hidden;
     }
   </style>
 </head>
@@ -133,13 +176,14 @@
       <!-- Current Weather & Forecast Card -->
       <div class="card">
         <div class="section-title">天氣預報</div>
-        <div style="display: table; width: 100%;">
-          <div style="display: table-cell; vertical-align: middle;">
+        <div class="weather-current-row">
+          <div class="weather-current-cell" style="width: 45%;">
             <div class="temp-large" id="current-temp">--°C</div>
           </div>
-          <div style="display: table-cell; vertical-align: middle; text-align: right;">
-            <div id="weather-condition" style="font-size: 18px; font-weight: 600;">載入中...</div>
-            <div class="weather-meta" id="weather-details">風速: -- | 濕度: --</div>
+          <div class="weather-current-cell" style="width: 55%; text-align: right;">
+            <img id="current-weather-icon" class="weather-icon-large" src="" alt="" style="display:none;" />
+            <div id="weather-condition" style="font-size: 17px; font-weight: 600; margin-top: 4px;">載入中...</div>
+            <div class="weather-meta" id="weather-details">風速: --</div>
           </div>
         </div>
 
@@ -162,7 +206,7 @@
   </div>
 
   <script>
-    // 1. Clock & Date (Traditional Chinese / HK Format)
+    // 1. Clock & Date
     function updateClock() {
       var now = new Date();
       var hours = (now.getHours() < 10 ? '0' : '') + now.getHours();
@@ -177,19 +221,23 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // WMO Weather Codes Translation to Chinese
-    function getWeatherDesc(code) {
-      if (code === 0) return "晴朗";
-      if (code >= 1 && code <= 3) return "多雲 / 部分時間有陽光";
-      if (code >= 45 && code <= 48) return "有霧";
-      if (code >= 51 && code <= 67) return "有微雨";
-      if (code >= 71 && code <= 77) return "有雪";
-      if (code >= 80 && code <= 82) return "大雨";
-      if (code >= 95) return "雷暴";
-      return "多雲";
+    // Weather Helper: Map Open-Meteo WMO Codes to Description & Icon URL
+    function getWeatherInfo(code) {
+      // Standard open-source weather icon set (HTTPS compatible for iOS 9)
+      var iconBase = "https://openweathermap.org/img/wn/";
+      
+      if (code === 0) return { desc: "晴朗", icon: iconBase + "01d@2x.png" };
+      if (code >= 1 && code <= 2) return { desc: "部分時間有陽光", icon: iconBase + "02d@2x.png" };
+      if (code === 3) return { desc: "多雲", icon: iconBase + "04d@2x.png" };
+      if (code >= 45 && code <= 48) return { desc: "有霧", icon: iconBase + "50d@2x.png" };
+      if (code >= 51 && code <= 67) return { desc: "微雨", icon: iconBase + "10d@2x.png" };
+      if (code >= 71 && code <= 77) return { desc: "有雪", icon: iconBase + "13d@2x.png" };
+      if (code >= 80 && code <= 82) return { desc: "大雨", icon: iconBase + "09d@2x.png" };
+      if (code >= 95) return { desc: "雷暴", icon: iconBase + "11d@2x.png" };
+      return { desc: "多雲", icon: iconBase + "03d@2x.png" };
     }
 
-    // 2. Open-Meteo Weather Fetcher (Default set to Hong Kong: 22.3193, 114.1694)
+    // 2. Weather Fetcher (Hong Kong: 22.3193, 114.1694)
     function fetchWeather() {
       var lat = "22.3193";
       var lon = "114.1694";
@@ -201,10 +249,17 @@
         if (xhr.status === 200) {
           var data = JSON.parse(xhr.responseText);
           
+          var currentInfo = getWeatherInfo(data.current_weather.weathercode);
           document.getElementById('current-temp').innerHTML = Math.round(data.current_weather.temperature) + "°C";
-          document.getElementById('weather-condition').innerHTML = getWeatherDesc(data.current_weather.weathercode);
+          document.getElementById('weather-condition').innerHTML = currentInfo.desc;
+          
+          var currentIconImg = document.getElementById('current-weather-icon');
+          currentIconImg.src = currentInfo.icon;
+          currentIconImg.style.display = "inline-block";
+          
           document.getElementById('weather-details').innerHTML = "風速: " + Math.round(data.current_weather.windspeed) + " km/h";
 
+          // 3-Day Forecast Strip
           var forecastHTML = "";
           var days = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
           for (var i = 1; i <= 3; i++) {
@@ -212,9 +267,11 @@
             var dayName = days[dateObj.getDay()];
             var maxTemp = Math.round(data.daily.temperature_2m_max[i]);
             var minTemp = Math.round(data.daily.temperature_2m_min[i]);
+            var dayInfo = getWeatherInfo(data.daily.weathercode[i]);
             
             forecastHTML += '<div class="forecast-day">';
             forecastHTML += '<div class="forecast-name">' + dayName + '</div>';
+            forecastHTML += '<img class="forecast-icon" src="' + dayInfo.icon + '" alt="" />';
             forecastHTML += '<div class="forecast-temp">' + maxTemp + '° <span style="color:#6e768e; font-weight:normal;">' + minTemp + '°</span></div>';
             forecastHTML += '</div>';
           }
@@ -224,11 +281,23 @@
       xhr.send();
     }
     fetchWeather();
-    setInterval(fetchWeather, 600000); // Update every 10 mins
+    setInterval(fetchWeather, 600000); // 10 mins
 
-    // 3. Yahoo News Hong Kong RSS Fetcher
+    // Helper: Extract image URL from Yahoo RSS item
+    function extractImageUrl(item) {
+      if (item.thumbnail && item.thumbnail !== "") return item.thumbnail;
+      if (item.enclosure && item.enclosure.link) return item.enclosure.link;
+      
+      // Parse description HTML for <img> tag if thumbnail field is empty
+      if (item.description) {
+        var match = item.description.match(/<img[^>]+src=["']([^"']+)["']/i);
+        if (match && match[1]) return match[1];
+      }
+      return null;
+    }
+
+    // 3. Yahoo News HK RSS Fetcher with Thumbnails
     function fetchNews() {
-      // Yahoo News HK RSS Feed URL
       var yahooHkRss = "https://hk.news.yahoo.com/rss/hong-kong";
       var url = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(yahooHkRss);
 
@@ -239,15 +308,30 @@
           var data = JSON.parse(xhr.responseText);
           if (data.items && data.items.length > 0) {
             var output = "";
-            var items = data.items.slice(0, 6); // Display top 6 news items
+            var items = data.items.slice(0, 5); // Display top 5 items to fit screen height nicely
+            
             for (var i = 0; i < items.length; i++) {
+              var imgUrl = extractImageUrl(items[i]);
+              
               output += '<div class="news-item">';
+              
+              // Thumbnail Cell
+              if (imgUrl) {
+                output += '<div class="news-thumb-cell">';
+                output += '<div class="news-thumb" style="background-image: url(\'' + imgUrl + '\');"></div>';
+                output += '</div>';
+              }
+              
+              // Text Cell
+              output += '<div class="news-text-cell">';
               output += '<div class="news-title">' + items[i].title + '</div>';
+              output += '</div>';
+              
               output += '</div>';
             }
             document.getElementById('news-container').innerHTML = output;
           } else {
-            document.getElementById('news-container').innerHTML = "無法載入新聞文章。";
+            document.getElementById('news-container').innerHTML = "無法載入新聞。";
           }
         }
       };
@@ -257,7 +341,7 @@
       xhr.send();
     }
     fetchNews();
-    setInterval(fetchNews, 1800000); // Update every 30 mins
+    setInterval(fetchNews, 1800000); // 30 mins
   </script>
 </body>
 </html>
