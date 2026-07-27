@@ -263,7 +263,7 @@
 
     <!-- News Box Card -->
     <div class="dashboard-card">
-      <h2 class="section-title">📰 Top News Updates</h2>
+      <h2 class="section-title">📰 Yahoo! 香港新聞 (Top News)</h2>
       <div id="news-list" class="news-list">
         <div class="loading">Loading news feed...</div>
       </div>
@@ -273,13 +273,13 @@
 
   <script>
     // Configuration
-    const LATITUDE = 35.6762;
-    const LONGITUDE = 139.6503;
-    const LOCATION_LABEL = "Tokyo";
+    var LATITUDE = 35.6762;
+    var LONGITUDE = 139.6503;
+    var LOCATION_LABEL = "Tokyo";
     
-    // RSS Feed Source for News Box (BBC News RSS converted via rss2json)
-    const NEWS_RSS_URL = "https://feeds.bbci.co.uk/news/world/rss.xml";
-    const NEWS_API_URL = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(NEWS_RSS_URL)}`;
+    // Yahoo News Hong Kong RSS Feed Endpoint
+    var NEWS_RSS_URL = "https://hk.news.yahoo.com/rss/hong-kong";
+    var NEWS_API_URL = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(NEWS_RSS_URL);
 
     function getWeatherDetails(code) {
       if (code === 0) return { icon: "☀️", desc: "Clear sky", warning: false };
@@ -293,114 +293,141 @@
     }
 
     function formatDate(dateStr) {
-      const date = new Date(dateStr + "T00:00:00");
-      const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
-      const monthDay = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-      return { dayName, monthDay };
+      // Append T00:00:00 for cross-browser date parsing
+      var date = new Date(dateStr.replace(/-/g, "/") + " 00:00:00");
+      var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return {
+        dayName: days[date.getDay()],
+        monthDay: months[date.getMonth()] + " " + date.getDate()
+      };
     }
 
-    // 1. Fetch 5-Day Weather Forecast
-    async function fetch5DayForecast() {
-      const forecastEl = document.getElementById("forecast");
-      const locationEl = document.getElementById("location-name");
-      const warningBanner = document.getElementById("warning-banner");
-      const warningText = document.getElementById("warning-text");
+    // 1. Fetch 5-Day Weather Forecast (iPad Mini 1 ES5 Compatible)
+    function fetch5DayForecast() {
+      var forecastEl = document.getElementById("forecast");
+      var locationEl = document.getElementById("location-name");
+      var warningBanner = document.getElementById("warning-banner");
+      var warningText = document.getElementById("warning-text");
 
       locationEl.textContent = LOCATION_LABEL;
 
-      const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&daily=weathercode,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min&timezone=auto&forecast_days=5`;
+      var apiUrl = "https://api.open-meteo.com/v1/forecast?latitude=" + LATITUDE + 
+                     "&longitude=" + LONGITUDE + 
+                     "&daily=weathercode,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min&timezone=auto&forecast_days=5";
 
-      try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) throw new Error("Weather fetch failed");
-        
-        const data = await response.json();
-        const daily = data.daily;
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", apiUrl, true);
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 400) {
+          try {
+            var data = JSON.parse(xhr.responseText);
+            var daily = data.daily;
 
-        forecastEl.innerHTML = "";
-        let activeWarnings = [];
+            forecastEl.innerHTML = "";
+            var activeWarnings = [];
 
-        for (let i = 0; i < daily.time.length; i++) {
-          const { dayName, monthDay } = formatDate(daily.time[i]);
-          const weather = getWeatherDetails(daily.weathercode[i]);
-          const maxTemp = Math.round(daily.temperature_2m_max[i]);
-          const minTemp = Math.round(daily.temperature_2m_min[i]);
-          const maxHum = daily.relative_humidity_2m_max[i];
-          const minHum = daily.relative_humidity_2m_min[i];
+            for (var i = 0; i < daily.time.length; i++) {
+              var formatted = formatDate(daily.time[i]);
+              var dayName = formatted.dayName;
+              var monthDay = formatted.monthDay;
+              var weather = getWeatherDetails(daily.weathercode[i]);
+              var maxTemp = Math.round(daily.temperature_2m_max[i]);
+              var minTemp = Math.round(daily.temperature_2m_min[i]);
+              var maxHum = daily.relative_humidity_2m_max[i];
+              var minHum = daily.relative_humidity_2m_min[i];
 
-          if (weather.warning && i <= 1) {
-            activeWarnings.push(`${i === 0 ? 'Today' : dayName}: ${weather.alertMsg}`);
+              if (weather.warning && i <= 1) {
+                activeWarnings.push((i === 0 ? "Today" : dayName) + ": " + weather.alertMsg);
+              }
+
+              var card = document.createElement("div");
+              card.className = "day-card";
+              card.innerHTML = 
+                '<div class="day-name">' + (i === 0 ? "Today" : dayName) + '</div>' +
+                '<div class="day-date">' + monthDay + '</div>' +
+                '<div class="weather-icon" title="' + weather.desc + '">' + weather.icon + '</div>' +
+                '<div class="temp-range">' +
+                  '<span class="temp-max">' + maxTemp + '°C</span>' +
+                  '<span class="temp-min">' + minTemp + '°C</span>' +
+                '</div>' +
+                '<div class="humidity">💧 ' + minHum + '-' + maxHum + '%</div>';
+              
+              forecastEl.appendChild(card);
+            }
+
+            if (activeWarnings.length > 0) {
+              warningText.textContent = activeWarnings.join(" | ");
+              warningBanner.className = "warning-banner active";
+            } else {
+              warningBanner.className = "warning-banner";
+            }
+          } catch(e) {
+            forecastEl.innerHTML = '<div class="error">Error processing weather data.</div>';
           }
-
-          const card = document.createElement("div");
-          card.className = "day-card";
-          card.innerHTML = `
-            <div class="day-name">${i === 0 ? "Today" : dayName}</div>
-            <div class="day-date">${monthDay}</div>
-            <div class="weather-icon" title="${weather.desc}">${weather.icon}</div>
-            <div class="temp-range">
-              <span class="temp-max">${maxTemp}°C</span>
-              <span class="temp-min">${minTemp}°C</span>
-            </div>
-            <div class="humidity">💧 ${minHum}-${maxHum}%</div>
-          `;
-          forecastEl.appendChild(card);
-        }
-
-        if (activeWarnings.length > 0) {
-          warningText.textContent = activeWarnings.join(" | ");
-          warningBanner.classList.add("active");
         } else {
-          warningBanner.classList.remove("active");
+          forecastEl.innerHTML = '<div class="error">Error loading weather data.</div>';
         }
-
-      } catch (err) {
-        forecastEl.innerHTML = `<div class="error">Error loading weather data.</div>`;
-        console.error(err);
-      }
+      };
+      xhr.onerror = function() {
+        forecastEl.innerHTML = '<div class="error">Network error loading weather.</div>';
+      };
+      xhr.send();
     }
 
-    // 2. Fetch News Feed for the News Box
-    async function fetchNewsFeed() {
-      const newsListEl = document.getElementById("news-list");
+    // 2. Fetch Yahoo News HK Feed (iPad Mini 1 ES5 Compatible)
+    function fetchNewsFeed() {
+      var newsListEl = document.getElementById("news-list");
 
-      try {
-        const response = await fetch(NEWS_API_URL);
-        if (!response.ok) throw new Error("News fetch failed");
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", NEWS_API_URL, true);
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 400) {
+          try {
+            var data = JSON.parse(xhr.responseText);
 
-        const data = await response.json();
+            if (!data.items || data.items.length === 0) {
+              newsListEl.innerHTML = '<div class="error">No recent news headlines available.</div>';
+              return;
+            }
 
-        if (!data.items || data.items.length === 0) {
-          newsListEl.innerHTML = `<div class="error">No recent news headlines available.</div>`;
-          return;
+            newsListEl.innerHTML = "";
+
+            // Display up to 6 top news items
+            var items = data.items.slice(0, 6);
+            for (var i = 0; i < items.length; i++) {
+              var item = items[i];
+              var pubDate = new Date(item.pubDate);
+              var hours = pubDate.getHours();
+              var minutes = pubDate.getMinutes();
+              var formattedTime = (hours < 10 ? '0' : '') + hours + ':' + (minutes < 10 ? '0' : '') + minutes;
+
+              var newsCard = document.createElement("a");
+              newsCard.className = "news-item";
+              newsCard.href = item.link;
+              newsCard.target = "_blank";
+              newsCard.rel = "noopener noreferrer";
+
+              newsCard.innerHTML = 
+                '<div class="news-item-title">' + item.title + '</div>' +
+                '<div class="news-item-meta">' +
+                  '<span class="news-source">Yahoo! 新聞 (HK)</span>' +
+                  '<span>' + formattedTime + '</span>' +
+                '</div>';
+
+              newsListEl.appendChild(newsCard);
+            }
+          } catch(e) {
+            newsListEl.innerHTML = '<div class="error">Error processing news data.</div>';
+          }
+        } else {
+          newsListEl.innerHTML = '<div class="error">Unable to load news feed.</div>';
         }
-
-        newsListEl.innerHTML = "";
-
-        // Display up to 6 top news items
-        data.items.slice(0, 6).forEach(item => {
-          const pubDate = new Date(item.pubDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-          const newsCard = document.createElement("a");
-          newsCard.className = "news-item";
-          newsCard.href = item.link;
-          newsCard.target = "_blank";
-          newsCard.rel = "noopener noreferrer";
-
-          newsCard.innerHTML = `
-            <div class="news-item-title">${item.title}</div>
-            <div class="news-item-meta">
-              <span class="news-source">BBC World News</span>
-              <span>${pubDate}</span>
-            </div>
-          `;
-          newsListEl.appendChild(newsCard);
-        });
-
-      } catch (err) {
-        newsListEl.innerHTML = `<div class="error">Unable to load news feed.</div>`;
-        console.error(err);
-      }
+      };
+      xhr.onerror = function() {
+        newsListEl.innerHTML = '<div class="error">Network error loading news.</div>';
+      };
+      xhr.send();
     }
 
     // Run Both Loaders
