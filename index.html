@@ -39,7 +39,7 @@
       align-items: center;
       min-height: 100vh;
       padding: 12px;
-      overflow: hidden; /* Prevents bounce scrolling on iPad */
+      overflow: hidden; /* Prevents outer bounce scrolling on iPad */
     }
 
     .container {
@@ -340,7 +340,9 @@
   <script>
     var NEWS_RSS_URL = "https://hk.news.yahoo.com/rss/hong-kong";
     var NEWS_API_URL = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(NEWS_RSS_URL);
-    var DEFAULT_THUMBNAIL = "https://s.yimg.com/cv/apiv2/social/images/yahoo_default_logo.png";
+    
+    // SVG Fallback Thumbnail inline (avoids external broken links)
+    var DEFAULT_THUMBNAIL = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='55' viewBox='0 0 80 55'><rect width='100%' height='100%' fill='%23334155'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-size='12' font-family='sans-serif'>新聞</text></svg>";
 
     // 1. Digital Clock Function
     function updateClock() {
@@ -400,7 +402,6 @@
               return;
             }
 
-            // Memory-safe DOM replacement
             while (forecastEl.firstChild) {
               forecastEl.removeChild(forecastEl.firstChild);
             }
@@ -491,15 +492,41 @@
       xhr.send();
     }
 
-    // Extract image thumbnail safely
+    // Decode HTML entities (e.g. &lt;img src="..."&gt;)
+    function decodeHtml(html) {
+      var txt = document.createElement("textarea");
+      txt.innerHTML = html;
+      return txt.value;
+    }
+
+    // Advanced Multi-stage Thumbnail Extractor
     function getThumbnailUrl(item) {
-      if (item.thumbnail) return item.thumbnail;
-      if (item.enclosure && item.enclosure.link) return item.enclosure.link;
-      
-      if (item.description) {
-        var match = item.description.match(/<img[^>]+src=["']([^"']+)["']/i);
-        if (match && match[1]) return match[1];
+      if (item.thumbnail && typeof item.thumbnail === 'string' && item.thumbnail.length > 5) {
+        return item.thumbnail;
       }
+      if (item.enclosure && item.enclosure.link) {
+        return item.enclosure.link;
+      }
+      
+      // Look inside custom media tags if present
+      if (item.media && item.media.content && item.media.content.url) {
+        return item.media.content.url;
+      }
+
+      // Extract <img> from content or description
+      var rawHtml = (item.content || "") + " " + (item.description || "");
+      var decodedHtml = decodeHtml(rawHtml);
+      
+      var match = decodedHtml.match(/<img[^>]+src=["']([^"']+)["']/i);
+      if (match && match[1]) {
+        var url = match[1];
+        // Upgrade http to https to avoid iOS mixed content blocks
+        if (url.indexOf("http://") === 0) {
+          url = "https://" + url.substring(7);
+        }
+        return url;
+      }
+
       return DEFAULT_THUMBNAIL;
     }
 
@@ -519,7 +546,6 @@
               return;
             }
 
-            // Memory-safe DOM replacement
             while (newsListEl.firstChild) {
               newsListEl.removeChild(newsListEl.firstChild);
             }
@@ -540,7 +566,7 @@
               newsCard.rel = "noopener noreferrer";
 
               newsCard.innerHTML = 
-                '<img class="news-thumbnail" src="' + imgUrl + '" alt="Thumbnail" onerror="this.src=\'' + DEFAULT_THUMBNAIL + '\'">' +
+                '<img class="news-thumbnail" src="' + imgUrl + '" alt="Thumbnail" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=\'' + DEFAULT_THUMBNAIL + '\';">' +
                 '<div class="news-content">' +
                   '<div class="news-item-title">' + item.title + '</div>' +
                   '<div class="news-item-meta">' +
