@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-HK">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>iPad Dashboard</title>
+  <title>iPad Dashboard - Yahoo HK News</title>
   <style>
-    /* Reset & Base UI */
+    /* Reset & Base Layout */
     * { box-sizing: border-box; }
     body {
       background-color: #0d0e12;
       color: #ffffff;
-      font-family: -apple-system, HelveticaNeue, Arial, sans-serif;
+      font-family: -apple-system, "PingFang HK", "Helvetica Neue", Arial, sans-serif;
       margin: 0;
       padding: 16px;
       overflow: hidden;
@@ -29,8 +29,8 @@
       vertical-align: top;
       padding: 0 8px;
     }
-    .col-left { width: 52%; }
-    .col-right { width: 48%; }
+    .col-left { width: 50%; }
+    .col-right { width: 50%; }
 
     /* Card Containers */
     .card {
@@ -41,7 +41,7 @@
       margin-bottom: 16px;
     }
 
-    /* Typography & Colors */
+    /* Section Headers */
     .section-title {
       font-size: 13px;
       font-weight: 600;
@@ -51,7 +51,7 @@
       margin-bottom: 12px;
     }
 
-    /* Clock Card */
+    /* Clock Styling */
     #clock {
       font-size: 72px;
       font-weight: 700;
@@ -66,7 +66,7 @@
       font-weight: 500;
     }
 
-    /* Weather Elements */
+    /* Weather Styling */
     .temp-large {
       font-size: 56px;
       font-weight: 300;
@@ -79,7 +79,7 @@
       margin-top: 10px;
     }
 
-    /* 3-Day Forecast Grid */
+    /* 3-Day Forecast Strip */
     .forecast-row {
       display: table;
       width: 100%;
@@ -103,18 +103,19 @@
       color: #ffffff;
     }
 
-    /* News Feed Elements */
+    /* News Feed Layout */
     .news-item {
       border-bottom: 1px solid #262933;
-      padding: 10px 0;
+      padding: 12px 0;
     }
     .news-item:last-child {
       border-bottom: none;
     }
     .news-title {
-      font-size: 14px;
+      font-size: 15px;
       line-height: 1.4;
       color: #e1e4ed;
+      font-weight: 500;
     }
   </style>
 </head>
@@ -126,19 +127,19 @@
       <!-- Clock Card -->
       <div class="card">
         <div id="clock">00:00</div>
-        <div id="date">Loading...</div>
+        <div id="date">更新中...</div>
       </div>
       
       <!-- Current Weather & Forecast Card -->
       <div class="card">
-        <div class="section-title">Weather Forecast</div>
+        <div class="section-title">天氣預報</div>
         <div style="display: table; width: 100%;">
           <div style="display: table-cell; vertical-align: middle;">
             <div class="temp-large" id="current-temp">--°C</div>
           </div>
           <div style="display: table-cell; vertical-align: middle; text-align: right;">
-            <div id="weather-condition" style="font-size: 18px; font-weight: 600;">Updating...</div>
-            <div class="weather-meta" id="weather-details">Wind: -- | Humidity: --</div>
+            <div id="weather-condition" style="font-size: 18px; font-weight: 600;">載入中...</div>
+            <div class="weather-meta" id="weather-details">風速: -- | 濕度: --</div>
           </div>
         </div>
 
@@ -151,47 +152,48 @@
       </div>
     </div>
 
-    <!-- RIGHT COLUMN: Local News -->
+    <!-- RIGHT COLUMN: Yahoo HK Local News -->
     <div class="col col-right">
       <div class="card" style="height: calc(100% - 16px);">
-        <div class="section-title">Local Headlines</div>
-        <div id="news-container">Fetching news feed...</div>
+        <div class="section-title">Yahoo 新聞 (香港頭條)</div>
+        <div id="news-container">載入雅虎新聞...</div>
       </div>
     </div>
   </div>
 
   <script>
-    // 1. Clock & Date (ES5 Syntax for iOS 9)
+    // 1. Clock & Date (Traditional Chinese / HK Format)
     function updateClock() {
       var now = new Date();
-      var hours = String(now.getHours()).padStart ? String(now.getHours()).padStart(2, '0') : (now.getHours() < 10 ? '0' : '') + now.getHours();
-      var minutes = String(now.getMinutes()).padStart ? String(now.getMinutes()).padStart(2, '0') : (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
+      var hours = (now.getHours() < 10 ? '0' : '') + now.getHours();
+      var minutes = (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
       document.getElementById('clock').innerHTML = hours + ':' + minutes;
       
-      var options = { weekday: 'long', month: 'short', day: 'numeric' };
-      document.getElementById('date').innerHTML = now.toLocaleDateString('en-US', options);
+      var days = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+      var month = now.getMonth() + 1;
+      var date = now.getDate();
+      document.getElementById('date').innerHTML = month + "月" + date + "日 " + days[now.getDay()];
     }
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Weather WMO Code Interpreter
+    // WMO Weather Codes Translation to Chinese
     function getWeatherDesc(code) {
-      if (code === 0) return "Clear Sky";
-      if (code >= 1 && code <= 3) return "Partly Cloudy";
-      if (code >= 45 && code <= 48) return "Foggy";
-      if (code >= 51 && code <= 67) return "Rain Showers";
-      if (code >= 71 && code <= 77) return "Snow";
-      if (code >= 80 && code <= 82) return "Heavy Rain";
-      if (code >= 95) return "Thunderstorm";
-      return "Cloudy";
+      if (code === 0) return "晴朗";
+      if (code >= 1 && code <= 3) return "多雲 / 部分時間有陽光";
+      if (code >= 45 && code <= 48) return "有霧";
+      if (code >= 51 && code <= 67) return "有微雨";
+      if (code >= 71 && code <= 77) return "有雪";
+      if (code >= 80 && code <= 82) return "大雨";
+      if (code >= 95) return "雷暴";
+      return "多雲";
     }
 
-    // 2. Open-Meteo Current + 3-Day Forecast Fetcher
+    // 2. Open-Meteo Weather Fetcher (Default set to Hong Kong: 22.3193, 114.1694)
     function fetchWeather() {
-      // Set your Latitude & Longitude here (Default: Tokyo 35.6762, 139.6503)
-      var lat = "35.6762";
-      var lon = "139.6503";
-      var url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto";
+      var lat = "22.3193";
+      var lon = "114.1694";
+      var url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FHong_Kong";
 
       var xhr = new XMLHttpRequest();
       xhr.open("GET", url, true);
@@ -199,14 +201,12 @@
         if (xhr.status === 200) {
           var data = JSON.parse(xhr.responseText);
           
-          // Current Weather
           document.getElementById('current-temp').innerHTML = Math.round(data.current_weather.temperature) + "°C";
           document.getElementById('weather-condition').innerHTML = getWeatherDesc(data.current_weather.weathercode);
-          document.getElementById('weather-details').innerHTML = "Wind: " + Math.round(data.current_weather.windspeed) + " km/h";
+          document.getElementById('weather-details').innerHTML = "風速: " + Math.round(data.current_weather.windspeed) + " km/h";
 
-          // 3-Day Forecast
           var forecastHTML = "";
-          var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+          var days = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
           for (var i = 1; i <= 3; i++) {
             var dateObj = new Date(data.daily.time[i]);
             var dayName = days[dateObj.getDay()];
@@ -224,33 +224,40 @@
       xhr.send();
     }
     fetchWeather();
-    setInterval(fetchWeather, 600000); // Refresh every 10 mins
+    setInterval(fetchWeather, 600000); // Update every 10 mins
 
-    // 3. RSS Local News Fetcher
+    // 3. Yahoo News Hong Kong RSS Fetcher
     function fetchNews() {
-      // Replace with your local news RSS URL if needed
-      var rssFeedUrl = encodeURIComponent("https://news.google.com/rss");
-      var url = "https://api.rss2json.com/v1/api.json?rss_url=" + rssFeedUrl;
+      // Yahoo News HK RSS Feed URL
+      var yahooHkRss = "https://hk.news.yahoo.com/rss/hong-kong";
+      var url = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(yahooHkRss);
 
       var xhr = new XMLHttpRequest();
       xhr.open("GET", url, true);
       xhr.onload = function() {
         if (xhr.status === 200) {
           var data = JSON.parse(xhr.responseText);
-          var output = "";
-          var items = data.items.slice(0, 6); // Display top 6 news items
-          for (var i = 0; i < items.length; i++) {
-            output += '<div class="news-item">';
-            output += '<div class="news-title">' + items[i].title + '</div>';
-            output += '</div>';
+          if (data.items && data.items.length > 0) {
+            var output = "";
+            var items = data.items.slice(0, 6); // Display top 6 news items
+            for (var i = 0; i < items.length; i++) {
+              output += '<div class="news-item">';
+              output += '<div class="news-title">' + items[i].title + '</div>';
+              output += '</div>';
+            }
+            document.getElementById('news-container').innerHTML = output;
+          } else {
+            document.getElementById('news-container').innerHTML = "無法載入新聞文章。";
           }
-          document.getElementById('news-container').innerHTML = output;
         }
+      };
+      xhr.onerror = function() {
+        document.getElementById('news-container').innerHTML = "新聞連線失敗。";
       };
       xhr.send();
     }
     fetchNews();
-    setInterval(fetchNews, 1800000); // Refresh every 30 mins
+    setInterval(fetchNews, 1800000); // Update every 30 mins
   </script>
 </body>
 </html>
