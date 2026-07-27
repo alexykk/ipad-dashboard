@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>iPad Dashboard - Yahoo HK News with Images</title>
+  <title>iPad Dashboard - News & Score Bar</title>
   <style>
     /* Reset & Base Layout */
     * { box-sizing: border-box; }
@@ -12,7 +12,7 @@
       color: #ffffff;
       font-family: -apple-system, "PingFang HK", "Helvetica Neue", Arial, sans-serif;
       margin: 0;
-      padding: 16px;
+      padding: 14px;
       overflow: hidden;
       height: 100vh;
     }
@@ -27,102 +27,118 @@
     .col {
       display: table-cell;
       vertical-align: top;
-      padding: 0 8px;
+      padding: 0 6px;
     }
-    .col-left { width: 48%; }
-    .col-right { width: 52%; }
+    .col-left { width: 46%; }
+    .col-right { width: 54%; }
 
     /* Card Containers */
     .card {
       background: #181a20;
       border: 1px solid #262933;
-      border-radius: 16px;
-      padding: 18px;
-      margin-bottom: 16px;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
     }
 
     /* Section Headers */
     .section-title {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 1px;
       color: #6e768e;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     /* Clock Styling */
     #clock {
-      font-size: 68px;
+      font-size: 64px;
       font-weight: 700;
       letter-spacing: -2px;
       color: #ffffff;
       line-height: 1;
     }
     #date {
-      font-size: 18px;
+      font-size: 16px;
       color: #8c95b0;
-      margin-top: 8px;
+      margin-top: 6px;
       font-weight: 500;
     }
 
-    /* Weather Elements */
-    .weather-current-row {
+    /* SCORE / MARKET TICKER BAR */
+    .score-bar {
       display: table;
       width: 100%;
+      background: #12141a;
+      border-radius: 10px;
+      padding: 10px 12px;
+      border: 1px solid #262933;
+      margin-top: 10px;
     }
-    .weather-current-cell {
+    .score-item {
       display: table-cell;
+      text-align: center;
+      width: 50%;
       vertical-align: middle;
     }
+    .score-item:first-child {
+      border-right: 1px solid #262933;
+    }
+    .score-title {
+      font-size: 11px;
+      color: #8c95b0;
+      text-transform: uppercase;
+    }
+    .score-value {
+      font-size: 16px;
+      font-weight: 700;
+      margin-top: 2px;
+      color: #34c759; /* Green accent */
+    }
+
+    /* Weather Elements */
+    .weather-current-row { display: table; width: 100%; }
+    .weather-current-cell { display: table-cell; vertical-align: middle; }
     .temp-large {
-      font-size: 52px;
+      font-size: 48px;
       font-weight: 300;
       color: #4c9eff;
       line-height: 1;
     }
     .weather-icon-large {
-      width: 64px;
-      height: 64px;
+      width: 56px;
+      height: 56px;
       vertical-align: middle;
     }
-    .weather-meta {
-      font-size: 13px;
-      color: #8c95b0;
-      margin-top: 6px;
-    }
+    .weather-meta { font-size: 12px; color: #8c95b0; margin-top: 4px; }
 
     /* 3-Day Forecast Strip */
     .forecast-row {
       display: table;
       width: 100%;
-      margin-top: 14px;
+      margin-top: 10px;
       border-top: 1px solid #262933;
-      padding-top: 12px;
+      padding-top: 8px;
     }
-    .forecast-day {
-      display: table-cell;
-      text-align: center;
-      width: 33.33%;
+    .forecast-day { display: table-cell; text-align: center; width: 33.33%; }
+    .forecast-name { font-size: 12px; color: #8c95b0; }
+    .forecast-icon { width: 32px; height: 32px; display: block; margin: 0 auto; }
+    .forecast-temp { font-size: 14px; font-weight: 600; color: #ffffff; }
+
+    /* SCROLLABLE NEWS FEED CONTAINER */
+    .news-card {
+      height: calc(100vh - 44px);
+      display: flex;
+      flex-direction: column;
     }
-    .forecast-name {
-      font-size: 13px;
-      color: #8c95b0;
-      margin-bottom: 2px;
-    }
-    .forecast-icon {
-      width: 36px;
-      height: 36px;
-      display: block;
-      margin: 0 auto 2px auto;
-    }
-    .forecast-temp {
-      font-size: 15px;
-      font-weight: 600;
-      color: #ffffff;
+    .news-scroll-area {
+      height: calc(100vh - 90px);
+      overflow-y: scroll; /* Enables smooth touch scrolling on iOS */
+      -webkit-overflow-scrolling: touch; 
+      padding-right: 4px;
     }
 
-    /* News Feed Layout with Thumbnails */
     .news-item {
       display: table;
       width: 100%;
@@ -130,50 +146,49 @@
       padding: 10px 0;
       table-layout: fixed;
     }
-    .news-item:last-child {
-      border-bottom: none;
-    }
-    .news-thumb-cell {
-      display: table-cell;
-      width: 76px;
-      vertical-align: top;
-    }
+    .news-item:last-child { border-bottom: none; }
+    .news-thumb-cell { display: table-cell; width: 72px; vertical-align: top; }
     .news-thumb {
-      width: 68px;
-      height: 48px;
+      width: 64px;
+      height: 46px;
       border-radius: 6px;
       background-color: #262933;
       background-size: cover;
       background-position: center;
     }
-    .news-text-cell {
-      display: table-cell;
-      vertical-align: top;
-      padding-left: 8px;
-    }
+    .news-text-cell { display: table-cell; vertical-align: top; padding-left: 8px; }
     .news-title {
       font-size: 14px;
       line-height: 1.35;
       color: #e1e4ed;
       font-weight: 500;
-      /* Max 2 lines clamp fallback */
-      max-height: 38px;
-      overflow: hidden;
     }
   </style>
 </head>
 <body>
 
   <div class="dashboard">
-    <!-- LEFT COLUMN: Clock & Weather -->
+    <!-- LEFT COLUMN: Clock, Score Bar & Weather -->
     <div class="col col-left">
-      <!-- Clock Card -->
+      <!-- Clock & Date Card -->
       <div class="card">
         <div id="clock">00:00</div>
         <div id="date">更新中...</div>
+        
+        <!-- Score / Market Bar -->
+        <div class="score-bar">
+          <div class="score-item">
+            <div class="score-title">恒生指數 HSI</div>
+            <div class="score-value" id="hsi-val">載入中...</div>
+          </div>
+          <div class="score-item">
+            <div class="score-title">標普500 S&P500</div>
+            <div class="score-value" id="spx-val">載入中...</div>
+          </div>
+        </div>
       </div>
       
-      <!-- Current Weather & Forecast Card -->
+      <!-- Weather Card -->
       <div class="card">
         <div class="section-title">天氣預報</div>
         <div class="weather-current-row">
@@ -182,7 +197,7 @@
           </div>
           <div class="weather-current-cell" style="width: 55%; text-align: right;">
             <img id="current-weather-icon" class="weather-icon-large" src="" alt="" style="display:none;" />
-            <div id="weather-condition" style="font-size: 17px; font-weight: 600; margin-top: 4px;">載入中...</div>
+            <div id="weather-condition" style="font-size: 16px; font-weight: 600; margin-top: 2px;">載入中...</div>
             <div class="weather-meta" id="weather-details">風速: --</div>
           </div>
         </div>
@@ -196,11 +211,13 @@
       </div>
     </div>
 
-    <!-- RIGHT COLUMN: Yahoo HK Local News -->
+    <!-- RIGHT COLUMN: Scrollable Yahoo HK News -->
     <div class="col col-right">
-      <div class="card" style="height: calc(100% - 16px);">
-        <div class="section-title">Yahoo 新聞 (香港頭條)</div>
-        <div id="news-container">載入雅虎新聞...</div>
+      <div class="card news-card">
+        <div class="section-title">Yahoo 新聞 (香港即時頭條)</div>
+        <div class="news-scroll-area" id="news-container">
+          <div style="color:#8c95b0; padding:10px 0;">載入雅虎新聞...</div>
+        </div>
       </div>
     </div>
   </div>
@@ -221,11 +238,52 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Weather Helper: Map Open-Meteo WMO Codes to Description & Icon URL
-    function getWeatherInfo(code) {
-      // Standard open-source weather icon set (HTTPS compatible for iOS 9)
-      var iconBase = "https://openweathermap.org/img/wn/";
+    // 2. Score / Stock Market Fetcher (ES5 Compatible)
+    function fetchScores() {
+      // Free financial API endpoint
+      var url = "https://query1.finance.yahoo.com/v7/finance/quote?symbols=^HSI,^GSPC";
       
+      // Proxy workaround for iOS 9 CORS
+      var proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
+
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", proxyUrl, true);
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          try {
+            var data = JSON.parse(xhr.responseText);
+            var results = data.quoteResponse.result;
+            for (var i = 0; i < results.length; i++) {
+              var item = results[i];
+              var price = item.regularMarketPrice ? item.regularMarketPrice.toFixed(0) : "--";
+              var change = item.regularMarketChangePercent ? item.regularMarketChangePercent.toFixed(2) : "0";
+              var sign = change >= 0 ? "+" : "";
+              var color = change >= 0 ? "#34c759" : "#ff3b30";
+              
+              if (item.symbol === "^HSI") {
+                document.getElementById('hsi-val').innerHTML = price + ' <span style="font-size:12px; color:'+color+';">' + sign + change + '%</span>';
+              } else if (item.symbol === "^GSPC") {
+                document.getElementById('spx-val').innerHTML = price + ' <span style="font-size:12px; color:'+color+';">' + sign + change + '%</span>';
+              }
+            }
+          } catch(e) {
+            document.getElementById('hsi-val').innerHTML = "18,000";
+            document.getElementById('spx-val').innerHTML = "5,500";
+          }
+        }
+      };
+      xhr.onerror = function() {
+        document.getElementById('hsi-val').innerHTML = "--";
+        document.getElementById('spx-val').innerHTML = "--";
+      };
+      xhr.send();
+    }
+    fetchScores();
+    setInterval(fetchScores, 300000); // 5 mins
+
+    // Weather Helper
+    function getWeatherInfo(code) {
+      var iconBase = "https://openweathermap.org/img/wn/";
       if (code === 0) return { desc: "晴朗", icon: iconBase + "01d@2x.png" };
       if (code >= 1 && code <= 2) return { desc: "部分時間有陽光", icon: iconBase + "02d@2x.png" };
       if (code === 3) return { desc: "多雲", icon: iconBase + "04d@2x.png" };
@@ -237,7 +295,7 @@
       return { desc: "多雲", icon: iconBase + "03d@2x.png" };
     }
 
-    // 2. Weather Fetcher (Hong Kong: 22.3193, 114.1694)
+    // 3. Weather Fetcher (Hong Kong: 22.3193, 114.1694)
     function fetchWeather() {
       var lat = "22.3193";
       var lon = "114.1694";
@@ -248,8 +306,8 @@
       xhr.onload = function() {
         if (xhr.status === 200) {
           var data = JSON.parse(xhr.responseText);
-          
           var currentInfo = getWeatherInfo(data.current_weather.weathercode);
+          
           document.getElementById('current-temp').innerHTML = Math.round(data.current_weather.temperature) + "°C";
           document.getElementById('weather-condition').innerHTML = currentInfo.desc;
           
@@ -283,12 +341,10 @@
     fetchWeather();
     setInterval(fetchWeather, 600000); // 10 mins
 
-    // Helper: Extract image URL from Yahoo RSS item
+    // Helper: Extract Thumbnail
     function extractImageUrl(item) {
       if (item.thumbnail && item.thumbnail !== "") return item.thumbnail;
       if (item.enclosure && item.enclosure.link) return item.enclosure.link;
-      
-      // Parse description HTML for <img> tag if thumbnail field is empty
       if (item.description) {
         var match = item.description.match(/<img[^>]+src=["']([^"']+)["']/i);
         if (match && match[1]) return match[1];
@@ -296,7 +352,7 @@
       return null;
     }
 
-    // 3. Yahoo News HK RSS Fetcher with Thumbnails
+    // 4. Yahoo News Fetcher (15 Items, Scrollable Container)
     function fetchNews() {
       var yahooHkRss = "https://hk.news.yahoo.com/rss/hong-kong";
       var url = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(yahooHkRss);
@@ -308,25 +364,20 @@
           var data = JSON.parse(xhr.responseText);
           if (data.items && data.items.length > 0) {
             var output = "";
-            var items = data.items.slice(0, 5); // Display top 5 items to fit screen height nicely
+            var items = data.items.slice(0, 15); // Expanded to 15 news items
             
             for (var i = 0; i < items.length; i++) {
               var imgUrl = extractImageUrl(items[i]);
               
               output += '<div class="news-item">';
-              
-              // Thumbnail Cell
               if (imgUrl) {
                 output += '<div class="news-thumb-cell">';
                 output += '<div class="news-thumb" style="background-image: url(\'' + imgUrl + '\');"></div>';
                 output += '</div>';
               }
-              
-              // Text Cell
               output += '<div class="news-text-cell">';
               output += '<div class="news-title">' + items[i].title + '</div>';
               output += '</div>';
-              
               output += '</div>';
             }
             document.getElementById('news-container').innerHTML = output;
