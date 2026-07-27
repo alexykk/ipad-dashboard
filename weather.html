@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weather Forecast</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f4f6f8; margin: 20px; }
+    .forecast-container { display: flex; gap: 12px; overflow-x: auto; padding: 10px 0; }
+    .card {
+      background: #fff;
+      padding: 16px;
+      border-radius: 12px;
+      min-width: 120px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    .card.today { border: 2px solid #007bff; }
+    .card .label { font-weight: bold; margin-bottom: 4px; }
+    .card .date { font-size: 0.85em; color: #666; margin-bottom: 8px; }
+    .card .temp { font-size: 1.2em; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h2>Weather Forecast</h2>
+  <div id="forecast" class="forecast-container">
+    <!-- Forecast cards render here -->
+  </div>
+
+  <script>
+    // Example: Weather API response array
+    // Notice index [0] is TODAY, index [1] is TOMORROW
+    const forecastData = [
+      { forecastDate: "20260727", week: "Monday", forecastTemp: { min: { value: 27 }, max: { value: 32 } }, forecastWeather: "Showers" },
+      { forecastDate: "20260728", week: "Tuesday", forecastTemp: { min: { value: 26 }, max: { value: 31 } }, forecastWeather: "Sunny" },
+      { forecastDate: "20260729", week: "Wednesday", forecastTemp: { min: { value: 25 }, max: { value: 30 } }, forecastWeather: "Rain" }
+    ];
+
+    function renderForecast(data) {
+      const container = document.getElementById('forecast');
+      container.innerHTML = '';
+
+      // Get today's local date string formatted as YYYYMMDD
+      const now = new Date();
+      const todayStr = now.getFullYear() +
+        String(now.getMonth() + 1).padStart(2, '0') +
+        String(now.getDate()).padStart(2, '0');
+
+      data.forEach((day, index) => {
+        // Fix 1: Check if this item's date actually matches local Today
+        const isToday = day.forecastDate === todayStr || index === 0;
+
+        // Fix 2: Format readable date (e.g., Jul 27)
+        const year = day.forecastDate.substring(0, 4);
+        const month = day.forecastDate.substring(4, 6) - 1;
+        const dateNum = day.forecastDate.substring(6, 8);
+        const dateObj = new Date(year, month, dateNum);
+        const dateFormatted = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+        const cardHtml = `
+          <div class="card ${isToday ? 'today' : ''}">
+            <div class="label">${isToday ? 'Today' : day.week}</div>
+            <div class="date">${dateFormatted}</div>
+            <div class="temp">${day.forecastTemp.min.value}° - ${day.forecastTemp.max.value}°C</div>
+            <div>${day.forecastWeather}</div>
+          </div>
+        `;
+
+        container.insertAdjacentHTML('beforeend', cardHtml);
+      });
+    }
+
+    renderForecast(forecastData);
+  </script>
+</body>
+</html>
