@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>iPad Dashboard</title>
+  <!-- iOS Fullscreen Standalone App Mode -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Dashboard">
+  
+  <title>iPad Dashboard - Hong Kong Observatory</title>
   <style>
     :root {
       --bg-color: #0f172a;
@@ -26,19 +31,24 @@
     body {
       background-color: var(--bg-color);
       color: var(--text-color);
+      display: -webkit-flex;
       display: flex;
+      -webkit-justify-content: center;
       justify-content: center;
+      -webkit-align-items: center;
       align-items: center;
       min-height: 100vh;
       padding: 12px;
-      overflow: hidden; /* Prevents outer bounce scrolling on iPad */
+      overflow: hidden; /* Prevents bounce scrolling on iPad */
     }
 
     .container {
       width: 100%;
       max-width: 980px;
       height: 96vh;
+      display: -webkit-flex;
       display: flex;
+      -webkit-flex-direction: column;
       flex-direction: column;
       gap: 12px;
     }
@@ -49,8 +59,11 @@
       border-radius: 12px;
       padding: 12px 20px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      display: -webkit-flex;
       display: flex;
+      -webkit-justify-content: space-between;
       justify-content: space-between;
+      -webkit-align-items: center;
       align-items: center;
       border: 1px solid var(--card-border);
     }
@@ -87,12 +100,16 @@
     }
 
     .weather-section {
+      -webkit-flex: 0 0 auto;
       flex: 0 0 auto;
     }
 
     .news-section {
+      -webkit-flex: 1 1 auto;
       flex: 1 1 auto;
+      display: -webkit-flex;
       display: flex;
+      -webkit-flex-direction: column;
       flex-direction: column;
       min-height: 0; /* Allows inner scrolling container to shrink */
     }
@@ -101,7 +118,9 @@
       font-size: 1.1rem;
       font-weight: 600;
       margin-bottom: 10px;
+      display: -webkit-flex;
       display: flex;
+      -webkit-align-items: center;
       align-items: center;
       gap: 8px;
     }
@@ -114,11 +133,13 @@
       border-radius: 8px;
       padding: 8px 12px;
       margin-bottom: 10px;
+      -webkit-align-items: center;
       align-items: center;
       gap: 12px;
     }
 
     .warning-banner.active {
+      display: -webkit-flex;
       display: flex;
     }
 
@@ -137,17 +158,22 @@
       color: #fef2f2;
     }
 
-    /* Weather 5-Day Grid */
+    /* Weather 5-Day Row (Flexbox for stable rendering on iOS 9) */
     .forecast-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      display: -webkit-flex;
+      display: flex;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
       gap: 8px;
     }
 
     .day-card {
+      -webkit-flex: 1;
+      flex: 1;
+      min-width: 0;
       background: rgba(255, 255, 255, 0.04);
       border-radius: 8px;
-      padding: 10px 6px;
+      padding: 10px 4px;
       text-align: center;
       border: 1px solid var(--card-border);
     }
@@ -164,15 +190,17 @@
     }
 
     .weather-icon {
-      font-size: 2rem; 
+      font-size: 1.8rem; 
       line-height: 1;
       margin: 4px 0;
     }
 
     .temp-range {
+      display: -webkit-flex;
       display: flex;
+      -webkit-justify-content: center;
       justify-content: center;
-      gap: 6px;
+      gap: 4px;
       font-size: 0.85rem;
       margin-bottom: 4px;
     }
@@ -197,12 +225,15 @@
 
     /* Scrollable News List */
     .news-list {
+      display: -webkit-flex;
       display: flex;
+      -webkit-flex-direction: column;
       flex-direction: column;
       gap: 8px;
       overflow-y: auto;
-      -webkit-overflow-scrolling: touch; /* Smooth kinetic scrolling for iOS 9 */
+      -webkit-overflow-scrolling: touch; /* Kinetic scrolling for iOS */
       padding-right: 4px;
+      -webkit-flex: 1;
       flex: 1;
     }
 
@@ -213,8 +244,10 @@
       padding: 10px 12px;
       text-decoration: none;
       color: inherit;
+      display: -webkit-flex;
       display: flex;
       gap: 12px;
+      -webkit-align-items: center;
       align-items: center;
     }
 
@@ -224,15 +257,19 @@
       object-fit: cover;
       border-radius: 6px;
       background-color: rgba(255, 255, 255, 0.05);
+      -webkit-flex-shrink: 0;
       flex-shrink: 0;
     }
 
     .news-content {
+      display: -webkit-flex;
       display: flex;
+      -webkit-flex-direction: column;
       flex-direction: column;
       gap: 4px;
+      -webkit-flex: 1;
       flex: 1;
-      min-width: 0; /* Prevents text overflow breaking layout */
+      min-width: 0;
     }
 
     .news-item-title {
@@ -248,7 +285,9 @@
     .news-item-meta {
       font-size: 0.75rem;
       color: var(--muted-color);
+      display: -webkit-flex;
       display: flex;
+      -webkit-justify-content: flex-end;
       justify-content: flex-end;
     }
 
@@ -299,14 +338,11 @@
   </div>
 
   <script>
-    // Yahoo News HK Feed Endpoint
     var NEWS_RSS_URL = "https://hk.news.yahoo.com/rss/hong-kong";
     var NEWS_API_URL = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(NEWS_RSS_URL);
-
-    // Default fallback thumbnail image
     var DEFAULT_THUMBNAIL = "https://s.yimg.com/cv/apiv2/social/images/yahoo_default_logo.png";
 
-    // 1. Digital Clock Function (Updates every second)
+    // 1. Digital Clock Function
     function updateClock() {
       var now = new Date();
       var hours = now.getHours();
@@ -327,14 +363,14 @@
 
     // Maps HKO Weather Icon Codes to Emojis
     function getHkoEmoji(code, desc) {
-      if (code === 50) return "☀️"; // Fine / Clear
-      if (code >= 51 && code <= 52) return "⛅"; // Sunny intervals
-      if (code >= 53 && code <= 54) return "🌦️"; // Sunny periods with showers
-      if (code >= 60 && code <= 61) return "☁️"; // Cloudy / Overcast
-      if (code >= 62 && code <= 65) return "🌧️"; // Rain / Heavy rain
-      if (code >= 70 && code <= 77) return "🌩️"; // Thunderstorms
-      if (code >= 80 && code <= 85) return "🌫️"; // Mist / Fog / Haze
-      if (code >= 90 && code <= 93) return "🌀"; // Tropical cyclone / Severe weather
+      if (code === 50) return "☀️";
+      if (code >= 51 && code <= 52) return "⛅";
+      if (code >= 53 && code <= 54) return "🌦️";
+      if (code >= 60 && code <= 61) return "☁️";
+      if (code >= 62 && code <= 65) return "🌧️";
+      if (code >= 70 && code <= 77) return "🌩️";
+      if (code >= 80 && code <= 85) return "🌫️";
+      if (code >= 90 && code <= 93) return "🌀";
 
       if (desc) {
         var lower = desc.toLowerCase();
@@ -346,7 +382,7 @@
       return "🌡️";
     }
 
-    // 2. Fetch Forecast & Warnings from Hong Kong Observatory API
+    // 2. Fetch Forecast & Warnings
     function fetch5DayForecast() {
       var forecastEl = document.getElementById("forecast");
       var apiUrl = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=fnd&lang=en";
@@ -360,18 +396,19 @@
             var forecastList = data.weatherForecast;
 
             if (!forecastList || forecastList.length === 0) {
-              forecastEl.innerHTML = '<div class="error">No forecast data available from HKO.</div>';
+              forecastEl.innerHTML = '<div class="error">No forecast data available.</div>';
               return;
             }
 
-            forecastEl.innerHTML = "";
+            // Memory-safe DOM replacement
+            while (forecastEl.firstChild) {
+              forecastEl.removeChild(forecastEl.firstChild);
+            }
 
-            // Display first 5 days
             var count = Math.min(5, forecastList.length);
             for (var i = 0; i < count; i++) {
               var item = forecastList[i];
 
-              // Parse HKO date format YYYYMMDD
               var dateStr = item.forecastDate;
               var month = dateStr.substring(4, 6);
               var day = dateStr.substring(6, 8);
@@ -419,7 +456,7 @@
       fetchHkoWarnings();
     }
 
-    // Fetch Weather Warnings from HKO
+    // Fetch Weather Warnings
     function fetchHkoWarnings() {
       var warningBanner = document.getElementById("warning-banner");
       var warningText = document.getElementById("warning-text");
@@ -448,20 +485,17 @@
             } else {
               warningBanner.className = "warning-banner";
             }
-          } catch(e) {
-            // Fail silently if no warning format match
-          }
+          } catch(e) {}
         }
       };
       xhr.send();
     }
 
-    // Helper to extract image URL from RSS feed object
+    // Extract image thumbnail safely
     function getThumbnailUrl(item) {
       if (item.thumbnail) return item.thumbnail;
       if (item.enclosure && item.enclosure.link) return item.enclosure.link;
       
-      // Fallback: extract <img> tag inside description if present
       if (item.description) {
         var match = item.description.match(/<img[^>]+src=["']([^"']+)["']/i);
         if (match && match[1]) return match[1];
@@ -469,7 +503,7 @@
       return DEFAULT_THUMBNAIL;
     }
 
-    // 3. Fetch Yahoo HK News Feed
+    // 3. Fetch News Feed
     function fetchNewsFeed() {
       var newsListEl = document.getElementById("news-list");
 
@@ -481,13 +515,16 @@
             var data = JSON.parse(xhr.responseText);
 
             if (!data.items || data.items.length === 0) {
-              newsListEl.innerHTML = '<div class="error">No recent news headlines available.</div>';
+              newsListEl.innerHTML = '<div class="error">No news headlines available.</div>';
               return;
             }
 
-            newsListEl.innerHTML = "";
+            // Memory-safe DOM replacement
+            while (newsListEl.firstChild) {
+              newsListEl.removeChild(newsListEl.firstChild);
+            }
 
-            var items = data.items.slice(0, 8);
+            var items = data.items.slice(0, 10);
             for (var i = 0; i < items.length; i++) {
               var item = items[i];
               var pubDate = new Date(item.pubDate);
@@ -526,11 +563,15 @@
       xhr.send();
     }
 
-    // Initialize clock and data feeds
+    // Initial Execution
     updateClock();
-    setInterval(updateClock, 1000);
     fetch5DayForecast();
     fetchNewsFeed();
+
+    // Auto-Refresh Timers for Ambient Display
+    setInterval(updateClock, 1000);                     // Clock: Every second
+    setInterval(fetch5DayForecast, 15 * 60 * 1000);     // Weather: Every 15 minutes
+    setInterval(fetchNewsFeed, 10 * 60 * 1000);        // News: Every 10 minutes
   </script>
 </body>
 </html>
