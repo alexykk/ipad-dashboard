@@ -10,6 +10,8 @@
       --card-bg: #1e293b;
       --text-color: #f8fafc;
       --accent-color: #38bdf8;
+      --warning-bg: #7f1d1d;
+      --warning-border: #ef4444;
       --muted-color: #94a3b8;
     }
 
@@ -32,21 +34,21 @@
 
     .container {
       width: 100%;
-      max-width: 800px;
+      max-width: 850px;
       background: var(--card-bg);
       border-radius: 16px;
       padding: 24px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
     }
 
     header {
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       text-align: center;
     }
 
     h1 {
       font-size: 1.8rem;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
 
     .subtitle {
@@ -54,29 +56,64 @@
       font-size: 0.95rem;
     }
 
+    /* Weather Warning Banner Style */
+    .warning-banner {
+      display: none;
+      background: var(--warning-bg);
+      border: 1px solid var(--warning-border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .warning-banner.active {
+      display: flex;
+    }
+
+    .warning-icon {
+      font-size: 3.5rem; /* Larger Warning Icon */
+      line-height: 1;
+    }
+
+    .warning-content h3 {
+      font-size: 1rem;
+      color: #fca5a5;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+
+    .warning-content p {
+      font-size: 0.9rem;
+      color: #fef2f2;
+    }
+
     .forecast-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 16px;
     }
 
     .day-card {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.04);
       border-radius: 12px;
-      padding: 16px;
+      padding: 18px 12px;
       text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      transition: transform 0.2s ease;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: transform 0.2s ease, background 0.2s ease;
     }
 
     .day-card:hover {
       transform: translateY(-4px);
+      background: rgba(255, 255, 255, 0.07);
     }
 
     .day-name {
       font-weight: 600;
       font-size: 1.1rem;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
 
     .day-date {
@@ -85,15 +122,18 @@
       margin-bottom: 12px;
     }
 
+    /* Enlarged Weather Icons */
     .weather-icon {
-      font-size: 2rem;
-      margin-bottom: 12px;
+      font-size: 3rem; 
+      line-height: 1;
+      margin: 8px 0 14px 0;
     }
 
     .temp-range {
       display: flex;
       justify-content: space-around;
       font-size: 0.95rem;
+      margin-bottom: 8px;
     }
 
     .temp-max {
@@ -103,6 +143,15 @@
 
     .temp-min {
       color: var(--muted-color);
+    }
+
+    .humidity {
+      font-size: 0.8rem;
+      color: #a7f3d0;
+      background: rgba(16, 185, 129, 0.1);
+      padding: 4px 6px;
+      border-radius: 6px;
+      display: inline-block;
     }
 
     .loading, .error {
@@ -116,34 +165,43 @@
 
   <div class="container">
     <header>
-      <h1 id="location-name">Loading location...</h1>
+      <h1 id="location-name">Loading...</h1>
       <p class="subtitle">5-Day Weather Forecast</p>
     </header>
 
+    <!-- Dynamic Warning Banner -->
+    <div id="warning-banner" class="warning-banner">
+      <div class="warning-icon">⚠️</div>
+      <div class="warning-content">
+        <h3>Weather Warning</h3>
+        <p id="warning-text">Severe weather conditions expected.</p>
+      </div>
+    </div>
+
+    <!-- Forecast Grid -->
     <div id="forecast" class="forecast-grid">
       <div class="loading">Fetching forecast data...</div>
     </div>
   </div>
 
   <script>
-    // Configuration: Set location coordinates (Default: Tokyo / Change to your target location)
+    // Configurable Location (Default: Tokyo / Change to your target location)
     const LATITUDE = 35.6762;
     const LONGITUDE = 139.6503;
     const LOCATION_LABEL = "Tokyo";
 
-    // Open-Meteo WMO Weather Code to Icon mapping
+    // Open-Meteo WMO Weather Code Mapping & Severity Flag
     function getWeatherDetails(code) {
-      if (code === 0) return { icon: "☀️", desc: "Clear sky" };
-      if (code >= 1 && code <= 3) return { icon: "⛅", desc: "Partly cloudy" };
-      if (code >= 45 && code <= 48) return { icon: "🌫️", desc: "Foggy" };
-      if (code >= 51 && code <= 67) return { icon: "🌧️", desc: "Rain / Drizzle" };
-      if (code >= 71 && code <= 77) return { icon: "❄️", desc: "Snow" };
-      if (code >= 80 && code <= 82) return { icon: "🌦️", desc: "Showers" };
-      if (code >= 95) return { icon: "🌩️", desc: "Thunderstorm" };
-      return { icon: "🌡️", desc: "Unknown" };
+      if (code === 0) return { icon: "☀️", desc: "Clear sky", warning: false };
+      if (code >= 1 && code <= 3) return { icon: "⛅", desc: "Partly cloudy", warning: false };
+      if (code >= 45 && code <= 48) return { icon: "🌫️", desc: "Foggy", warning: true, alertMsg: "Fog Advisory: Reduced visibility" };
+      if (code >= 51 && code <= 67) return { icon: "🌧️", desc: "Rain / Drizzle", warning: false };
+      if (code >= 71 && code <= 77) return { icon: "❄️", desc: "Snowfall", warning: true, alertMsg: "Snow Advisory: Hazardous driving conditions" };
+      if (code >= 80 && code <= 82) return { icon: "🌦️", desc: "Heavy Rain Showers", warning: true, alertMsg: "Heavy Rain Warning" };
+      if (code >= 95) return { icon: "🌩️", desc: "Thunderstorm", warning: true, alertMsg: "Thunderstorm Warning: Lightning risk" };
+      return { icon: "🌡️", desc: "Unknown", warning: false };
     }
 
-    // Helper to format date strings (YYYY-MM-DD) into Day name and short date
     function formatDate(dateStr) {
       const date = new Date(dateStr + "T00:00:00");
       const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
@@ -154,11 +212,13 @@
     async function fetch5DayForecast() {
       const forecastEl = document.getElementById("forecast");
       const locationEl = document.getElementById("location-name");
-      
+      const warningBanner = document.getElementById("warning-banner");
+      const warningText = document.getElementById("warning-text");
+
       locationEl.textContent = LOCATION_LABEL;
 
-      // API Request requesting 5 forecast days and daily parameters
-      const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=5`;
+      // URL updated to request relative humidity max/min parameters
+      const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&daily=weathercode,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min&timezone=auto&forecast_days=5`;
 
       try {
         const response = await fetch(apiUrl);
@@ -167,15 +227,23 @@
         const data = await response.json();
         const daily = data.daily;
 
-        // Clear existing loading indicator
         forecastEl.innerHTML = "";
+        let activeWarnings = [];
 
-        // Loop through the 5 days returned
         for (let i = 0; i < daily.time.length; i++) {
           const { dayName, monthDay } = formatDate(daily.time[i]);
           const weather = getWeatherDetails(daily.weathercode[i]);
           const maxTemp = Math.round(daily.temperature_2m_max[i]);
           const minTemp = Math.round(daily.temperature_2m_min[i]);
+          
+          // Humidity values
+          const maxHum = daily.relative_humidity_2m_max[i];
+          const minHum = daily.relative_humidity_2m_min[i];
+
+          // Check for severe weather on Today (i = 0) or upcoming days
+          if (weather.warning && i <= 1) {
+            activeWarnings.push(`${i === 0 ? 'Today' : dayName}: ${weather.alertMsg}`);
+          }
 
           const card = document.createElement("div");
           card.className = "day-card";
@@ -187,16 +255,25 @@
               <span class="temp-max">${maxTemp}°C</span>
               <span class="temp-min">${minTemp}°C</span>
             </div>
+            <div class="humidity">💧 ${minHum}-${maxHum}%</div>
           `;
           forecastEl.appendChild(card);
         }
+
+        // Render Warning Banner if active weather codes detected
+        if (activeWarnings.length > 0) {
+          warningText.textContent = activeWarnings.join(" | ");
+          warningBanner.classList.add("active");
+        } else {
+          warningBanner.classList.remove("active");
+        }
+
       } catch (err) {
-        forecastEl.innerHTML = `<div class="error">Error loading forecast. Please try again.</div>`;
+        forecastEl.innerHTML = `<div class="error">Error loading forecast data.</div>`;
         console.error(err);
       }
     }
 
-    // Initialize forecast load
     fetch5DayForecast();
   </script>
 </body>
