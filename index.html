@@ -2,102 +2,170 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- Optimized for iPad Mini 1 Resolution (1024x768) -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>iPad Dashboard</title>
   <style>
-    /* Dark theme reduces display thermal load and screen aging */
+    /* Reset & Base UI */
+    * { box-sizing: border-box; }
     body {
-      background-color: #000000;
-      color: #FFFFFF;
+      background-color: #0d0e12;
+      color: #ffffff;
       font-family: -apple-system, HelveticaNeue, Arial, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 16px;
       overflow: hidden;
+      height: 100vh;
     }
-    .grid {
+
+    /* Grid Layout */
+    .dashboard {
       display: table;
       width: 100%;
-      height: 100vh;
+      height: 100%;
       table-layout: fixed;
     }
     .col {
       display: table-cell;
       vertical-align: top;
-      padding: 10px;
+      padding: 0 8px;
     }
-    .col-left { width: 45%; }
-    .col-right { width: 55%; }
-    
+    .col-left { width: 52%; }
+    .col-right { width: 48%; }
+
+    /* Card Containers */
     .card {
-      background: #1c1c1e;
-      border-radius: 12px;
+      background: #181a20;
+      border: 1px solid #262933;
+      border-radius: 16px;
       padding: 20px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
+
+    /* Typography & Colors */
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #6e768e;
+      margin-bottom: 12px;
+    }
+
+    /* Clock Card */
     #clock {
-      font-size: 64px;
-      font-weight: bold;
-      letter-spacing: -1px;
+      font-size: 72px;
+      font-weight: 700;
+      letter-spacing: -2px;
+      color: #ffffff;
+      line-height: 1;
     }
     #date {
-      font-size: 20px;
-      color: #8e8e93;
-      margin-top: 5px;
+      font-size: 18px;
+      color: #8c95b0;
+      margin-top: 8px;
+      font-weight: 500;
     }
-    .temp {
-      font-size: 52px;
+
+    /* Weather Elements */
+    .temp-large {
+      font-size: 56px;
       font-weight: 300;
-      color: #0a84ff;
+      color: #4c9eff;
+      line-height: 1;
     }
+    .weather-meta {
+      font-size: 14px;
+      color: #8c95b0;
+      margin-top: 10px;
+    }
+
+    /* 3-Day Forecast Grid */
+    .forecast-row {
+      display: table;
+      width: 100%;
+      margin-top: 16px;
+      border-top: 1px solid #262933;
+      padding-top: 12px;
+    }
+    .forecast-day {
+      display: table-cell;
+      text-align: center;
+      width: 33.33%;
+    }
+    .forecast-name {
+      font-size: 13px;
+      color: #8c95b0;
+      margin-bottom: 4px;
+    }
+    .forecast-temp {
+      font-size: 16px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    /* News Feed Elements */
     .news-item {
-      border-bottom: 1px solid #2c2c2e;
+      border-bottom: 1px solid #262933;
       padding: 10px 0;
     }
-    .news-title {
-      font-size: 16px;
-      color: #ffffff;
-      text-decoration: none;
+    .news-item:last-child {
+      border-bottom: none;
     }
-    .news-time {
-      font-size: 12px;
-      color: #8e8e93;
-      margin-top: 3px;
+    .news-title {
+      font-size: 14px;
+      line-height: 1.4;
+      color: #e1e4ed;
     }
   </style>
 </head>
 <body>
 
-  <div class="grid">
-    <!-- Left Column: Clock & Weather -->
+  <div class="dashboard">
+    <!-- LEFT COLUMN: Clock & Weather -->
     <div class="col col-left">
+      <!-- Clock Card -->
       <div class="card">
         <div id="clock">00:00</div>
-        <div id="date">Loading date...</div>
+        <div id="date">Loading...</div>
       </div>
       
+      <!-- Current Weather & Forecast Card -->
       <div class="card">
-        <div style="font-size:18px; color:#8e8e93;">Current Weather</div>
-        <div class="temp" id="weather-temp">--°C</div>
-        <div id="weather-desc" style="font-size:18px;">Fetching weather...</div>
+        <div class="section-title">Weather Forecast</div>
+        <div style="display: table; width: 100%;">
+          <div style="display: table-cell; vertical-align: middle;">
+            <div class="temp-large" id="current-temp">--°C</div>
+          </div>
+          <div style="display: table-cell; vertical-align: middle; text-align: right;">
+            <div id="weather-condition" style="font-size: 18px; font-weight: 600;">Updating...</div>
+            <div class="weather-meta" id="weather-details">Wind: -- | Humidity: --</div>
+          </div>
+        </div>
+
+        <!-- 3-Day Forecast Strip -->
+        <div class="forecast-row" id="forecast-container">
+          <div class="forecast-day"><div class="forecast-name">--</div><div class="forecast-temp">--°</div></div>
+          <div class="forecast-day"><div class="forecast-name">--</div><div class="forecast-temp">--°</div></div>
+          <div class="forecast-day"><div class="forecast-name">--</div><div class="forecast-temp">--°</div></div>
+        </div>
       </div>
     </div>
 
-    <!-- Right Column: Local News RSS Feed -->
+    <!-- RIGHT COLUMN: Local News -->
     <div class="col col-right">
-      <div class="card">
-        <div style="font-size:18px; color:#8e8e93; margin-bottom:10px;">Local Headlines</div>
-        <div id="news-container">Loading RSS headlines...</div>
+      <div class="card" style="height: calc(100% - 16px);">
+        <div class="section-title">Local Headlines</div>
+        <div id="news-container">Fetching news feed...</div>
       </div>
     </div>
   </div>
 
   <script>
-    // --- 1. Clock (Updates every second) ---
+    // 1. Clock & Date (ES5 Syntax for iOS 9)
     function updateClock() {
       var now = new Date();
-      var hours = String(now.getHours()).padStart(2, '0');
-      var minutes = String(now.getMinutes()).padStart(2, '0');
+      var hours = String(now.getHours()).padStart ? String(now.getHours()).padStart(2, '0') : (now.getHours() < 10 ? '0' : '') + now.getHours();
+      var minutes = String(now.getMinutes()).padStart ? String(now.getMinutes()).padStart(2, '0') : (now.getMinutes() < 10 ? '0' : '') + now.getMinutes();
       document.getElementById('clock').innerHTML = hours + ':' + minutes;
       
       var options = { weekday: 'long', month: 'short', day: 'numeric' };
@@ -106,20 +174,51 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // --- 2. Weather Fetcher (Open-Meteo, ES5 Compatible) ---
+    // Weather WMO Code Interpreter
+    function getWeatherDesc(code) {
+      if (code === 0) return "Clear Sky";
+      if (code >= 1 && code <= 3) return "Partly Cloudy";
+      if (code >= 45 && code <= 48) return "Foggy";
+      if (code >= 51 && code <= 67) return "Rain Showers";
+      if (code >= 71 && code <= 77) return "Snow";
+      if (code >= 80 && code <= 82) return "Heavy Rain";
+      if (code >= 95) return "Thunderstorm";
+      return "Cloudy";
+    }
+
+    // 2. Open-Meteo Current + 3-Day Forecast Fetcher
     function fetchWeather() {
-      // Replace with your local Latitude and Longitude
+      // Set your Latitude & Longitude here (Default: Tokyo 35.6762, 139.6503)
       var lat = "35.6762";
       var lon = "139.6503";
-      var url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current_weather=true";
+      var url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto";
 
       var xhr = new XMLHttpRequest();
       xhr.open("GET", url, true);
       xhr.onload = function() {
         if (xhr.status === 200) {
           var data = JSON.parse(xhr.responseText);
-          document.getElementById('weather-temp').innerHTML = Math.round(data.current_weather.temperature) + "°C";
-          document.getElementById('weather-desc').innerHTML = "Wind: " + data.current_weather.windspeed + " km/h";
+          
+          // Current Weather
+          document.getElementById('current-temp').innerHTML = Math.round(data.current_weather.temperature) + "°C";
+          document.getElementById('weather-condition').innerHTML = getWeatherDesc(data.current_weather.weathercode);
+          document.getElementById('weather-details').innerHTML = "Wind: " + Math.round(data.current_weather.windspeed) + " km/h";
+
+          // 3-Day Forecast
+          var forecastHTML = "";
+          var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+          for (var i = 1; i <= 3; i++) {
+            var dateObj = new Date(data.daily.time[i]);
+            var dayName = days[dateObj.getDay()];
+            var maxTemp = Math.round(data.daily.temperature_2m_max[i]);
+            var minTemp = Math.round(data.daily.temperature_2m_min[i]);
+            
+            forecastHTML += '<div class="forecast-day">';
+            forecastHTML += '<div class="forecast-name">' + dayName + '</div>';
+            forecastHTML += '<div class="forecast-temp">' + maxTemp + '° <span style="color:#6e768e; font-weight:normal;">' + minTemp + '°</span></div>';
+            forecastHTML += '</div>';
+          }
+          document.getElementById('forecast-container').innerHTML = forecastHTML;
         }
       };
       xhr.send();
@@ -127,9 +226,9 @@
     fetchWeather();
     setInterval(fetchWeather, 600000); // Refresh every 10 mins
 
-    // --- 3. RSS News Fetcher (iOS 9 CORS Workaround via RSS2JSON) ---
+    // 3. RSS Local News Fetcher
     function fetchNews() {
-      // Replace with your local news station's RSS feed URL
+      // Replace with your local news RSS URL if needed
       var rssFeedUrl = encodeURIComponent("https://news.google.com/rss");
       var url = "https://api.rss2json.com/v1/api.json?rss_url=" + rssFeedUrl;
 
@@ -139,7 +238,7 @@
         if (xhr.status === 200) {
           var data = JSON.parse(xhr.responseText);
           var output = "";
-          var items = data.items.slice(0, 5); // Limit to top 5 news items
+          var items = data.items.slice(0, 6); // Display top 6 news items
           for (var i = 0; i < items.length; i++) {
             output += '<div class="news-item">';
             output += '<div class="news-title">' + items[i].title + '</div>';
