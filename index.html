@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>5-Day Weather Forecast</title>
+  <title>5-Day Weather & News Dashboard</title>
   <style>
     :root {
       --bg-color: #0f172a;
@@ -13,6 +13,7 @@
       --warning-bg: #7f1d1d;
       --warning-border: #ef4444;
       --muted-color: #94a3b8;
+      --card-border: rgba(255, 255, 255, 0.08);
     }
 
     * {
@@ -34,7 +35,14 @@
 
     .container {
       width: 100%;
-      max-width: 850px;
+      max-width: 880px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Main Dashboard Box */
+    .dashboard-card {
       background: var(--card-bg);
       border-radius: 16px;
       padding: 24px;
@@ -56,7 +64,7 @@
       font-size: 0.95rem;
     }
 
-    /* Weather Warning Banner Style */
+    /* Weather Warning Banner */
     .warning-banner {
       display: none;
       background: var(--warning-bg);
@@ -73,7 +81,7 @@
     }
 
     .warning-icon {
-      font-size: 3.5rem; /* Larger Warning Icon */
+      font-size: 3.5rem;
       line-height: 1;
     }
 
@@ -90,6 +98,7 @@
       color: #fef2f2;
     }
 
+    /* Forecast Grid */
     .forecast-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -101,7 +110,7 @@
       border-radius: 12px;
       padding: 18px 12px;
       text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--card-border);
       transition: transform 0.2s ease, background 0.2s ease;
     }
 
@@ -122,7 +131,6 @@
       margin-bottom: 12px;
     }
 
-    /* Enlarged Weather Icons */
     .weather-icon {
       font-size: 3rem; 
       line-height: 1;
@@ -154,9 +162,75 @@
       display: inline-block;
     }
 
+    /* News Box Section */
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .news-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 380px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    /* Scrollbar styling */
+    .news-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .news-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+
+    .news-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.2s ease, border-color 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .news-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .news-item-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-color);
+      line-height: 1.3;
+    }
+
+    .news-item-meta {
+      font-size: 0.78rem;
+      color: var(--muted-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .news-source {
+      color: var(--accent-color);
+      font-weight: 500;
+    }
+
     .loading, .error {
       text-align: center;
-      padding: 40px;
+      padding: 30px;
       color: var(--muted-color);
     }
   </style>
@@ -164,41 +238,57 @@
 <body>
 
   <div class="container">
-    <header>
-      <h1 id="location-name">Loading...</h1>
-      <p class="subtitle">5-Day Weather Forecast</p>
-    </header>
+    
+    <!-- Weather Card -->
+    <div class="dashboard-card">
+      <header>
+        <h1 id="location-name">Loading...</h1>
+        <p class="subtitle">5-Day Weather Forecast</p>
+      </header>
 
-    <!-- Dynamic Warning Banner -->
-    <div id="warning-banner" class="warning-banner">
-      <div class="warning-icon">⚠️</div>
-      <div class="warning-content">
-        <h3>Weather Warning</h3>
-        <p id="warning-text">Severe weather conditions expected.</p>
+      <!-- Warning Banner -->
+      <div id="warning-banner" class="warning-banner">
+        <div class="warning-icon">⚠️</div>
+        <div class="warning-content">
+          <h3>Weather Warning</h3>
+          <p id="warning-text">Severe weather conditions expected.</p>
+        </div>
+      </div>
+
+      <!-- Forecast Grid -->
+      <div id="forecast" class="forecast-grid">
+        <div class="loading">Fetching forecast data...</div>
       </div>
     </div>
 
-    <!-- Forecast Grid -->
-    <div id="forecast" class="forecast-grid">
-      <div class="loading">Fetching forecast data...</div>
+    <!-- News Box Card -->
+    <div class="dashboard-card">
+      <h2 class="section-title">📰 Top News Updates</h2>
+      <div id="news-list" class="news-list">
+        <div class="loading">Loading news feed...</div>
+      </div>
     </div>
+
   </div>
 
   <script>
-    // Configurable Location (Default: Tokyo / Change to your target location)
+    // Configuration
     const LATITUDE = 35.6762;
     const LONGITUDE = 139.6503;
     const LOCATION_LABEL = "Tokyo";
+    
+    // RSS Feed Source for News Box (BBC News RSS converted via rss2json)
+    const NEWS_RSS_URL = "https://feeds.bbci.co.uk/news/world/rss.xml";
+    const NEWS_API_URL = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(NEWS_RSS_URL)}`;
 
-    // Open-Meteo WMO Weather Code Mapping & Severity Flag
     function getWeatherDetails(code) {
       if (code === 0) return { icon: "☀️", desc: "Clear sky", warning: false };
       if (code >= 1 && code <= 3) return { icon: "⛅", desc: "Partly cloudy", warning: false };
-      if (code >= 45 && code <= 48) return { icon: "🌫️", desc: "Foggy", warning: true, alertMsg: "Fog Advisory: Reduced visibility" };
+      if (code >= 45 && code <= 48) return { icon: "🌫️", desc: "Foggy", warning: true, alertMsg: "Fog Advisory: Low visibility" };
       if (code >= 51 && code <= 67) return { icon: "🌧️", desc: "Rain / Drizzle", warning: false };
-      if (code >= 71 && code <= 77) return { icon: "❄️", desc: "Snowfall", warning: true, alertMsg: "Snow Advisory: Hazardous driving conditions" };
-      if (code >= 80 && code <= 82) return { icon: "🌦️", desc: "Heavy Rain Showers", warning: true, alertMsg: "Heavy Rain Warning" };
-      if (code >= 95) return { icon: "🌩️", desc: "Thunderstorm", warning: true, alertMsg: "Thunderstorm Warning: Lightning risk" };
+      if (code >= 71 && code <= 77) return { icon: "❄️", desc: "Snowfall", warning: true, alertMsg: "Snow Advisory" };
+      if (code >= 80 && code <= 82) return { icon: "🌦️", desc: "Heavy Showers", warning: true, alertMsg: "Heavy Rain Warning" };
+      if (code >= 95) return { icon: "🌩️", desc: "Thunderstorm", warning: true, alertMsg: "Thunderstorm Warning" };
       return { icon: "🌡️", desc: "Unknown", warning: false };
     }
 
@@ -209,6 +299,7 @@
       return { dayName, monthDay };
     }
 
+    // 1. Fetch 5-Day Weather Forecast
     async function fetch5DayForecast() {
       const forecastEl = document.getElementById("forecast");
       const locationEl = document.getElementById("location-name");
@@ -217,12 +308,11 @@
 
       locationEl.textContent = LOCATION_LABEL;
 
-      // URL updated to request relative humidity max/min parameters
       const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&daily=weathercode,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min&timezone=auto&forecast_days=5`;
 
       try {
         const response = await fetch(apiUrl);
-        if (!response.ok) throw new Error("Failed to fetch weather data");
+        if (!response.ok) throw new Error("Weather fetch failed");
         
         const data = await response.json();
         const daily = data.daily;
@@ -235,12 +325,9 @@
           const weather = getWeatherDetails(daily.weathercode[i]);
           const maxTemp = Math.round(daily.temperature_2m_max[i]);
           const minTemp = Math.round(daily.temperature_2m_min[i]);
-          
-          // Humidity values
           const maxHum = daily.relative_humidity_2m_max[i];
           const minHum = daily.relative_humidity_2m_min[i];
 
-          // Check for severe weather on Today (i = 0) or upcoming days
           if (weather.warning && i <= 1) {
             activeWarnings.push(`${i === 0 ? 'Today' : dayName}: ${weather.alertMsg}`);
           }
@@ -260,7 +347,6 @@
           forecastEl.appendChild(card);
         }
 
-        // Render Warning Banner if active weather codes detected
         if (activeWarnings.length > 0) {
           warningText.textContent = activeWarnings.join(" | ");
           warningBanner.classList.add("active");
@@ -269,12 +355,57 @@
         }
 
       } catch (err) {
-        forecastEl.innerHTML = `<div class="error">Error loading forecast data.</div>`;
+        forecastEl.innerHTML = `<div class="error">Error loading weather data.</div>`;
         console.error(err);
       }
     }
 
+    // 2. Fetch News Feed for the News Box
+    async function fetchNewsFeed() {
+      const newsListEl = document.getElementById("news-list");
+
+      try {
+        const response = await fetch(NEWS_API_URL);
+        if (!response.ok) throw new Error("News fetch failed");
+
+        const data = await response.json();
+
+        if (!data.items || data.items.length === 0) {
+          newsListEl.innerHTML = `<div class="error">No recent news headlines available.</div>`;
+          return;
+        }
+
+        newsListEl.innerHTML = "";
+
+        // Display up to 6 top news items
+        data.items.slice(0, 6).forEach(item => {
+          const pubDate = new Date(item.pubDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+          const newsCard = document.createElement("a");
+          newsCard.className = "news-item";
+          newsCard.href = item.link;
+          newsCard.target = "_blank";
+          newsCard.rel = "noopener noreferrer";
+
+          newsCard.innerHTML = `
+            <div class="news-item-title">${item.title}</div>
+            <div class="news-item-meta">
+              <span class="news-source">BBC World News</span>
+              <span>${pubDate}</span>
+            </div>
+          `;
+          newsListEl.appendChild(newsCard);
+        });
+
+      } catch (err) {
+        newsListEl.innerHTML = `<div class="error">Unable to load news feed.</div>`;
+        console.error(err);
+      }
+    }
+
+    // Run Both Loaders
     fetch5DayForecast();
+    fetchNewsFeed();
   </script>
 </body>
 </html>
