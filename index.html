@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>5-Day Weather & News Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>iPad Dashboard - Hong Kong</title>
   <style>
     :root {
       --bg-color: #0f172a;
@@ -20,7 +20,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
 
     body {
@@ -30,38 +30,80 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 20px;
+      padding: 12px;
+      overflow: hidden; /* Prevents outer bounce scrolling on iPad */
     }
 
     .container {
       width: 100%;
-      max-width: 880px;
+      max-width: 980px;
+      height: 96vh;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 12px;
     }
 
-    /* Main Dashboard Box */
+    /* Live Clock Top Banner */
+    .clock-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 12px 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid var(--card-border);
+    }
+
+    .clock-time {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      letter-spacing: 1px;
+      line-height: 1;
+    }
+
+    .clock-details {
+      text-align: right;
+    }
+
+    .clock-date {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .clock-location {
+      font-size: 0.85rem;
+      color: var(--muted-color);
+    }
+
+    /* Main Dashboard Section */
     .dashboard-card {
       background: var(--card-bg);
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--card-border);
     }
 
-    header {
-      margin-bottom: 20px;
-      text-align: center;
+    .weather-section {
+      flex: 0 0 auto;
     }
 
-    h1 {
-      font-size: 1.8rem;
-      margin-bottom: 4px;
+    .news-section {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0; /* Allows inner scrolling container to shrink */
     }
 
-    .subtitle {
-      color: var(--muted-color);
-      font-size: 0.95rem;
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     /* Weather Warning Banner */
@@ -69,11 +111,11 @@
       display: none;
       background: var(--warning-bg);
       border: 1px solid var(--warning-border);
-      border-radius: 12px;
-      padding: 14px 18px;
-      margin-bottom: 20px;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
     }
 
     .warning-banner.active {
@@ -81,67 +123,58 @@
     }
 
     .warning-icon {
-      font-size: 3.5rem;
-      line-height: 1;
+      font-size: 1.8rem;
     }
 
     .warning-content h3 {
-      font-size: 1rem;
+      font-size: 0.85rem;
       color: #fca5a5;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 2px;
     }
 
     .warning-content p {
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       color: #fef2f2;
     }
 
-    /* Forecast Grid */
+    /* Weather 5-Day Grid */
     .forecast-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
     }
 
     .day-card {
       background: rgba(255, 255, 255, 0.04);
-      border-radius: 12px;
-      padding: 18px 12px;
+      border-radius: 8px;
+      padding: 10px 6px;
       text-align: center;
       border: 1px solid var(--card-border);
-      transition: transform 0.2s ease, background 0.2s ease;
-    }
-
-    .day-card:hover {
-      transform: translateY(-4px);
-      background: rgba(255, 255, 255, 0.07);
     }
 
     .day-name {
       font-weight: 600;
-      font-size: 1.1rem;
-      margin-bottom: 2px;
+      font-size: 0.95rem;
     }
 
     .day-date {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--muted-color);
-      margin-bottom: 12px;
+      margin-bottom: 4px;
     }
 
     .weather-icon {
-      font-size: 3rem; 
+      font-size: 2rem; 
       line-height: 1;
-      margin: 8px 0 14px 0;
+      margin: 4px 0;
     }
 
     .temp-range {
       display: flex;
-      justify-content: space-around;
-      font-size: 0.95rem;
-      margin-bottom: 8px;
+      justify-content: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
     }
 
     .temp-max {
@@ -154,73 +187,49 @@
     }
 
     .humidity {
-      font-size: 0.8rem;
+      font-size: 0.7rem;
       color: #a7f3d0;
       background: rgba(16, 185, 129, 0.1);
-      padding: 4px 6px;
-      border-radius: 6px;
+      padding: 2px 4px;
+      border-radius: 4px;
       display: inline-block;
     }
 
-    /* News Box Section */
-    .section-title {
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
+    /* Scrollable News List */
     .news-list {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      max-height: 380px;
+      gap: 8px;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch; /* Smooth kinetic scrolling for iOS 9 */
       padding-right: 4px;
-    }
-
-    /* Scrollbar styling */
-    .news-list::-webkit-scrollbar {
-      width: 6px;
-    }
-    .news-list::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 3px;
+      flex: 1;
     }
 
     .news-item {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--card-border);
-      border-radius: 10px;
-      padding: 14px 16px;
+      border-radius: 8px;
+      padding: 10px 12px;
       text-decoration: none;
       color: inherit;
-      transition: background 0.2s ease, border-color 0.2s ease;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-    }
-
-    .news-item:hover {
-      background: rgba(255, 255, 255, 0.06);
-      border-color: rgba(56, 189, 248, 0.4);
+      gap: 4px;
     }
 
     .news-item-title {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 600;
       color: var(--text-color);
       line-height: 1.3;
     }
 
     .news-item-meta {
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       color: var(--muted-color);
       display: flex;
       justify-content: space-between;
-      align-items: center;
     }
 
     .news-source {
@@ -230,8 +239,9 @@
 
     .loading, .error {
       text-align: center;
-      padding: 30px;
+      padding: 20px;
       color: var(--muted-color);
+      font-size: 0.9rem;
     }
   </style>
 </head>
@@ -239,30 +249,32 @@
 
   <div class="container">
     
-    <!-- Weather Card -->
-    <div class="dashboard-card">
-      <header>
-        <h1 id="location-name">Loading...</h1>
-        <p class="subtitle">5-Day Weather Forecast</p>
-      </header>
+    <!-- Real-Time Clock Header -->
+    <div class="clock-card">
+      <div class="clock-time" id="clock-time">--:--:--</div>
+      <div class="clock-details">
+        <div class="clock-date" id="clock-date">Loading date...</div>
+        <div class="clock-location">📍 Hong Kong (香港)</div>
+      </div>
+    </div>
 
-      <!-- Warning Banner -->
+    <!-- Weather Card -->
+    <div class="dashboard-card weather-section">
       <div id="warning-banner" class="warning-banner">
         <div class="warning-icon">⚠️</div>
         <div class="warning-content">
-          <h3>Weather Warning</h3>
+          <h3>Weather Advisory</h3>
           <p id="warning-text">Severe weather conditions expected.</p>
         </div>
       </div>
 
-      <!-- Forecast Grid -->
       <div id="forecast" class="forecast-grid">
-        <div class="loading">Fetching forecast data...</div>
+        <div class="loading">Loading Hong Kong Weather...</div>
       </div>
     </div>
 
-    <!-- News Box Card -->
-    <div class="dashboard-card">
+    <!-- Yahoo News Card -->
+    <div class="dashboard-card news-section">
       <h2 class="section-title">📰 Yahoo! 香港新聞 (Top News)</h2>
       <div id="news-list" class="news-list">
         <div class="loading">Loading news feed...</div>
@@ -272,19 +284,38 @@
   </div>
 
   <script>
-    // Configuration
-    var LATITUDE = 35.6762;
-    var LONGITUDE = 139.6503;
+    // Hong Kong Coordinates
+    var LATITUDE = 22.3193;
+    var LONGITUDE = 114.1694;
     var LOCATION_LABEL = "Hong Kong";
     
-    // Yahoo News Hong Kong RSS Feed Endpoint
+    // Yahoo News HK Feed
     var NEWS_RSS_URL = "https://hk.news.yahoo.com/rss/hong-kong";
     var NEWS_API_URL = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(NEWS_RSS_URL);
+
+    // 1. Digital Clock Function (Updates every second)
+    function updateClock() {
+      var now = new Date();
+      var hours = now.getHours();
+      var minutes = now.getMinutes();
+      var seconds = now.getSeconds();
+
+      var timeStr = (hours < 10 ? '0' : '') + hours + ':' + 
+                    (minutes < 10 ? '0' : '') + minutes + ':' + 
+                    (seconds < 10 ? '0' : '') + seconds;
+
+      var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      var dateStr = days[now.getDay()] + ", " + months[now.getMonth()] + " " + now.getDate();
+
+      document.getElementById("clock-time").textContent = timeStr;
+      document.getElementById("clock-date").textContent = dateStr;
+    }
 
     function getWeatherDetails(code) {
       if (code === 0) return { icon: "☀️", desc: "Clear sky", warning: false };
       if (code >= 1 && code <= 3) return { icon: "⛅", desc: "Partly cloudy", warning: false };
-      if (code >= 45 && code <= 48) return { icon: "🌫️", desc: "Foggy", warning: true, alertMsg: "Fog Advisory: Low visibility" };
+      if (code >= 45 && code <= 48) return { icon: "🌫️", desc: "Foggy", warning: true, alertMsg: "Fog Advisory" };
       if (code >= 51 && code <= 67) return { icon: "🌧️", desc: "Rain / Drizzle", warning: false };
       if (code >= 71 && code <= 77) return { icon: "❄️", desc: "Snowfall", warning: true, alertMsg: "Snow Advisory" };
       if (code >= 80 && code <= 82) return { icon: "🌦️", desc: "Heavy Showers", warning: true, alertMsg: "Heavy Rain Warning" };
@@ -293,7 +324,6 @@
     }
 
     function formatDate(dateStr) {
-      // Append T00:00:00 for cross-browser date parsing
       var date = new Date(dateStr.replace(/-/g, "/") + " 00:00:00");
       var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -303,18 +333,15 @@
       };
     }
 
-    // 1. Fetch 5-Day Weather Forecast (iPad Mini 1 ES5 Compatible)
+    // 2. Fetch HK 5-Day Weather Forecast
     function fetch5DayForecast() {
       var forecastEl = document.getElementById("forecast");
-      var locationEl = document.getElementById("location-name");
       var warningBanner = document.getElementById("warning-banner");
       var warningText = document.getElementById("warning-text");
 
-      locationEl.textContent = LOCATION_LABEL;
-
       var apiUrl = "https://api.open-meteo.com/v1/forecast?latitude=" + LATITUDE + 
                      "&longitude=" + LONGITUDE + 
-                     "&daily=weathercode,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min&timezone=auto&forecast_days=5";
+                     "&daily=weathercode,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min&timezone=Asia%2FHong_Kong&forecast_days=5";
 
       var xhr = new XMLHttpRequest();
       xhr.open("GET", apiUrl, true);
@@ -375,7 +402,7 @@
       xhr.send();
     }
 
-    // 2. Fetch Yahoo News HK Feed (iPad Mini 1 ES5 Compatible)
+    // 3. Fetch Yahoo HK News Feed
     function fetchNewsFeed() {
       var newsListEl = document.getElementById("news-list");
 
@@ -393,8 +420,7 @@
 
             newsListEl.innerHTML = "";
 
-            // Display up to 6 top news items
-            var items = data.items.slice(0, 6);
+            var items = data.items.slice(0, 8);
             for (var i = 0; i < items.length; i++) {
               var item = items[i];
               var pubDate = new Date(item.pubDate);
@@ -411,7 +437,7 @@
               newsCard.innerHTML = 
                 '<div class="news-item-title">' + item.title + '</div>' +
                 '<div class="news-item-meta">' +
-                  '<span class="news-source">Yahoo! 新聞 (HK)</span>' +
+                  '<span class="news-source">Yahoo! 香港新聞</span>' +
                   '<span>' + formattedTime + '</span>' +
                 '</div>';
 
@@ -430,7 +456,9 @@
       xhr.send();
     }
 
-    // Run Both Loaders
+    // Initialize clock and data feeds
+    updateClock();
+    setInterval(updateClock, 1000);
     fetch5DayForecast();
     fetchNewsFeed();
   </script>
