@@ -1457,7 +1457,7 @@
 
               var weekDay = item.week;
               var shortDay = weekDay.substring(0, 3);
-              var displayName = (i === 0) ? "Today" : shortDay;
+              var displayName = shortDay;
 
               var maxTemp = item.forecastMaxtemp.value;
               var minTemp = item.forecastMintemp.value;
@@ -1469,7 +1469,7 @@
               var iconEmoji = getHkoEmoji(iconCode, weatherDesc);
 
               var card = document.createElement("div");
-              card.className = "day-card" + (i === 0 ? " today" : "");
+              card.className = "day-card";
               card.innerHTML =
                 '<div class="day-name">' + displayName + '</div>' +
                 '<div class="day-date">' + monthDay + '</div>' +
