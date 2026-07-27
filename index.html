@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>iPad Dashboard - Hong Kong</title>
+  <title>iPad Dashboard</title>
   <style>
     :root {
       --bg-color: #0f172a;
@@ -214,8 +214,25 @@
       text-decoration: none;
       color: inherit;
       display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .news-thumbnail {
+      width: 80px;
+      height: 55px;
+      object-fit: cover;
+      border-radius: 6px;
+      background-color: rgba(255, 255, 255, 0.05);
+      flex-shrink: 0;
+    }
+
+    .news-content {
+      display: flex;
       flex-direction: column;
       gap: 4px;
+      flex: 1;
+      min-width: 0; /* Prevents text overflow breaking layout */
     }
 
     .news-item-title {
@@ -223,18 +240,16 @@
       font-weight: 600;
       color: var(--text-color);
       line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .news-item-meta {
       font-size: 0.75rem;
       color: var(--muted-color);
       display: flex;
-      justify-content: space-between;
-    }
-
-    .news-source {
-      color: var(--accent-color);
-      font-weight: 500;
+      justify-content: flex-end;
     }
 
     .loading, .error {
@@ -254,7 +269,7 @@
       <div class="clock-time" id="clock-time">--:--:--</div>
       <div class="clock-details">
         <div class="clock-date" id="clock-date">Loading date...</div>
-        <div class="clock-location">📍 Hong Kong (香港)</div>
+        <div class="clock-location">📍 香港天文台 (HKO)</div>
       </div>
     </div>
 
@@ -263,13 +278,13 @@
       <div id="warning-banner" class="warning-banner">
         <div class="warning-icon">⚠️</div>
         <div class="warning-content">
-          <h3>Weather Advisory</h3>
-          <p id="warning-text">Severe weather conditions expected.</p>
+          <h3>HKO Weather Warning</h3>
+          <p id="warning-text">Severe weather conditions reported.</p>
         </div>
       </div>
 
       <div id="forecast" class="forecast-grid">
-        <div class="loading">Loading Hong Kong Weather...</div>
+        <div class="loading">Loading Hong Kong Observatory Data...</div>
       </div>
     </div>
 
@@ -284,14 +299,12 @@
   </div>
 
   <script>
-    // Hong Kong Coordinates
-    var LATITUDE = 22.3193;
-    var LONGITUDE = 114.1694;
-    var LOCATION_LABEL = "Hong Kong";
-    
-    // Yahoo News HK Feed
+    // Yahoo News HK Feed Endpoint
     var NEWS_RSS_URL = "https://hk.news.yahoo.com/rss/hong-kong";
     var NEWS_API_URL = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(NEWS_RSS_URL);
+
+    // Default fallback thumbnail image
+    var DEFAULT_THUMBNAIL = "https://s.yimg.com/cv/apiv2/social/images/yahoo_default_logo.png";
 
     // 1. Digital Clock Function (Updates every second)
     function updateClock() {
@@ -312,36 +325,31 @@
       document.getElementById("clock-date").textContent = dateStr;
     }
 
-    function getWeatherDetails(code) {
-      if (code === 0) return { icon: "☀️", desc: "Clear sky", warning: false };
-      if (code >= 1 && code <= 3) return { icon: "⛅", desc: "Partly cloudy", warning: false };
-      if (code >= 45 && code <= 48) return { icon: "🌫️", desc: "Foggy", warning: true, alertMsg: "Fog Advisory" };
-      if (code >= 51 && code <= 67) return { icon: "🌧️", desc: "Rain / Drizzle", warning: false };
-      if (code >= 71 && code <= 77) return { icon: "❄️", desc: "Snowfall", warning: true, alertMsg: "Snow Advisory" };
-      if (code >= 80 && code <= 82) return { icon: "🌦️", desc: "Heavy Showers", warning: true, alertMsg: "Heavy Rain Warning" };
-      if (code >= 95) return { icon: "🌩️", desc: "Thunderstorm", warning: true, alertMsg: "Thunderstorm Warning" };
-      return { icon: "🌡️", desc: "Unknown", warning: false };
+    // Maps HKO Weather Icon Codes to Emojis
+    function getHkoEmoji(code, desc) {
+      if (code === 50) return "☀️"; // Fine / Clear
+      if (code >= 51 && code <= 52) return "⛅"; // Sunny intervals
+      if (code >= 53 && code <= 54) return "🌦️"; // Sunny periods with showers
+      if (code >= 60 && code <= 61) return "☁️"; // Cloudy / Overcast
+      if (code >= 62 && code <= 65) return "🌧️"; // Rain / Heavy rain
+      if (code >= 70 && code <= 77) return "🌩️"; // Thunderstorms
+      if (code >= 80 && code <= 85) return "🌫️"; // Mist / Fog / Haze
+      if (code >= 90 && code <= 93) return "🌀"; // Tropical cyclone / Severe weather
+
+      if (desc) {
+        var lower = desc.toLowerCase();
+        if (lower.indexOf("thunder") !== -1) return "🌩️";
+        if (lower.indexOf("rain") !== -1 || lower.indexOf("shower") !== -1) return "🌧️";
+        if (lower.indexOf("cloud") !== -1) return "☁️";
+        if (lower.indexOf("fine") !== -1 || lower.indexOf("sunny") !== -1) return "☀️";
+      }
+      return "🌡️";
     }
 
-    function formatDate(dateStr) {
-      var date = new Date(dateStr.replace(/-/g, "/") + " 00:00:00");
-      var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-      var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      return {
-        dayName: days[date.getDay()],
-        monthDay: months[date.getMonth()] + " " + date.getDate()
-      };
-    }
-
-    // 2. Fetch HK 5-Day Weather Forecast
+    // 2. Fetch Forecast & Warnings from Hong Kong Observatory API
     function fetch5DayForecast() {
       var forecastEl = document.getElementById("forecast");
-      var warningBanner = document.getElementById("warning-banner");
-      var warningText = document.getElementById("warning-text");
-
-      var apiUrl = "https://api.open-meteo.com/v1/forecast?latitude=" + LATITUDE + 
-                     "&longitude=" + LONGITUDE + 
-                     "&daily=weathercode,temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min&timezone=Asia%2FHong_Kong&forecast_days=5";
+      var apiUrl = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=fnd&lang=en";
 
       var xhr = new XMLHttpRequest();
       xhr.open("GET", apiUrl, true);
@@ -349,57 +357,116 @@
         if (xhr.status >= 200 && xhr.status < 400) {
           try {
             var data = JSON.parse(xhr.responseText);
-            var daily = data.daily;
+            var forecastList = data.weatherForecast;
+
+            if (!forecastList || forecastList.length === 0) {
+              forecastEl.innerHTML = '<div class="error">No forecast data available from HKO.</div>';
+              return;
+            }
 
             forecastEl.innerHTML = "";
-            var activeWarnings = [];
 
-            for (var i = 0; i < daily.time.length; i++) {
-              var formatted = formatDate(daily.time[i]);
-              var dayName = formatted.dayName;
-              var monthDay = formatted.monthDay;
-              var weather = getWeatherDetails(daily.weathercode[i]);
-              var maxTemp = Math.round(daily.temperature_2m_max[i]);
-              var minTemp = Math.round(daily.temperature_2m_min[i]);
-              var maxHum = daily.relative_humidity_2m_max[i];
-              var minHum = daily.relative_humidity_2m_min[i];
+            // Display first 5 days
+            var count = Math.min(5, forecastList.length);
+            for (var i = 0; i < count; i++) {
+              var item = forecastList[i];
 
-              if (weather.warning && i <= 1) {
-                activeWarnings.push((i === 0 ? "Today" : dayName) + ": " + weather.alertMsg);
-              }
+              // Parse HKO date format YYYYMMDD
+              var dateStr = item.forecastDate;
+              var month = dateStr.substring(4, 6);
+              var day = dateStr.substring(6, 8);
+              var monthDay = month + "/" + day;
+
+              var weekDay = item.week;
+              var shortDay = weekDay.substring(0, 3);
+              var displayName = (i === 0) ? "Today" : shortDay;
+
+              var maxTemp = item.forecastMaxtemp.value;
+              var minTemp = item.forecastMintemp.value;
+              var maxRh = item.forecastMaxrh.value;
+              var minRh = item.forecastMinrh.value;
+              var iconCode = item.ForecastIcon;
+              var weatherDesc = item.forecastWeather || "";
+
+              var iconEmoji = getHkoEmoji(iconCode, weatherDesc);
 
               var card = document.createElement("div");
               card.className = "day-card";
               card.innerHTML = 
-                '<div class="day-name">' + (i === 0 ? "Today" : dayName) + '</div>' +
+                '<div class="day-name">' + displayName + '</div>' +
                 '<div class="day-date">' + monthDay + '</div>' +
-                '<div class="weather-icon" title="' + weather.desc + '">' + weather.icon + '</div>' +
+                '<div class="weather-icon" title="' + weatherDesc + '">' + iconEmoji + '</div>' +
                 '<div class="temp-range">' +
                   '<span class="temp-max">' + maxTemp + '°C</span>' +
                   '<span class="temp-min">' + minTemp + '°C</span>' +
                 '</div>' +
-                '<div class="humidity">💧 ' + minHum + '-' + maxHum + '%</div>';
-              
+                '<div class="humidity">💧 ' + minRh + '-' + maxRh + '%</div>';
+
               forecastEl.appendChild(card);
             }
+          } catch(e) {
+            forecastEl.innerHTML = '<div class="error">Error processing HKO data.</div>';
+          }
+        } else {
+          forecastEl.innerHTML = '<div class="error">Error loading HKO forecast.</div>';
+        }
+      };
+      xhr.onerror = function() {
+        forecastEl.innerHTML = '<div class="error">Network error connecting to HKO.</div>';
+      };
+      xhr.send();
 
-            if (activeWarnings.length > 0) {
-              warningText.textContent = activeWarnings.join(" | ");
+      fetchHkoWarnings();
+    }
+
+    // Fetch Weather Warnings from HKO
+    function fetchHkoWarnings() {
+      var warningBanner = document.getElementById("warning-banner");
+      var warningText = document.getElementById("warning-text");
+      var warnUrl = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=en";
+
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", warnUrl, true);
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 400) {
+          try {
+            var data = JSON.parse(xhr.responseText);
+            var activeWarns = [];
+
+            for (var key in data) {
+              if (data.hasOwnProperty(key) && data[key]) {
+                var warnObj = data[key];
+                if (warnObj.name) {
+                  activeWarns.push(warnObj.name);
+                }
+              }
+            }
+
+            if (activeWarns.length > 0) {
+              warningText.textContent = activeWarns.join(" | ");
               warningBanner.className = "warning-banner active";
             } else {
               warningBanner.className = "warning-banner";
             }
           } catch(e) {
-            forecastEl.innerHTML = '<div class="error">Error processing weather data.</div>';
+            // Fail silently if no warning format match
           }
-        } else {
-          forecastEl.innerHTML = '<div class="error">Error loading weather data.</div>';
         }
       };
-      xhr.onerror = function() {
-        forecastEl.innerHTML = '<div class="error">Network error loading weather.</div>';
-      };
       xhr.send();
+    }
+
+    // Helper to extract image URL from RSS feed object
+    function getThumbnailUrl(item) {
+      if (item.thumbnail) return item.thumbnail;
+      if (item.enclosure && item.enclosure.link) return item.enclosure.link;
+      
+      // Fallback: extract <img> tag inside description if present
+      if (item.description) {
+        var match = item.description.match(/<img[^>]+src=["']([^"']+)["']/i);
+        if (match && match[1]) return match[1];
+      }
+      return DEFAULT_THUMBNAIL;
     }
 
     // 3. Fetch Yahoo HK News Feed
@@ -427,6 +494,7 @@
               var hours = pubDate.getHours();
               var minutes = pubDate.getMinutes();
               var formattedTime = (hours < 10 ? '0' : '') + hours + ':' + (minutes < 10 ? '0' : '') + minutes;
+              var imgUrl = getThumbnailUrl(item);
 
               var newsCard = document.createElement("a");
               newsCard.className = "news-item";
@@ -435,10 +503,12 @@
               newsCard.rel = "noopener noreferrer";
 
               newsCard.innerHTML = 
-                '<div class="news-item-title">' + item.title + '</div>' +
-                '<div class="news-item-meta">' +
-                  '<span class="news-source">Yahoo! 香港新聞</span>' +
-                  '<span>' + formattedTime + '</span>' +
+                '<img class="news-thumbnail" src="' + imgUrl + '" alt="Thumbnail" onerror="this.src=\'' + DEFAULT_THUMBNAIL + '\'">' +
+                '<div class="news-content">' +
+                  '<div class="news-item-title">' + item.title + '</div>' +
+                  '<div class="news-item-meta">' +
+                    '<span>' + formattedTime + '</span>' +
+                  '</div>' +
                 '</div>';
 
               newsListEl.appendChild(newsCard);
