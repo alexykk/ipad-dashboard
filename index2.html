@@ -1089,10 +1089,6 @@
               <div class="qi-value info" id="qi-visibility">-- km</div>
             </div>
             <div class="qi-item">
-              <div class="qi-label">📏 Pressure</div>
-              <div class="qi-value info" id="qi-pressure">-- hPa</div>
-            </div>
-            <div class="qi-item">
               <div class="qi-label">🌊 Tide</div>
               <div class="qi-value info" id="qi-tide">--</div>
             </div>
@@ -1112,6 +1108,7 @@
     var HKO_CURRENT_URL = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=en";
     var HKO_FORECAST_URL = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=fnd&lang=en";
     var HKO_WARNING_URL = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc";
+    var WIND_URL = "https://data.weather.gov.hk/weatherAPI/hko_data/regional-weather/latest_10min_wind.csv";
 
     var DEFAULT_THUMBNAIL = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='55' viewBox='0 0 80 55'><rect width='100%' height='100%' fill='%23334155'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-size='12' font-family='sans-serif'>RTHK</text></svg>";
 
@@ -1346,11 +1343,41 @@
             document.getElementById("cw-condition").textContent = condition;
 
             // Wind
-            if (data.wind && data.wind.data && data.wind.data.length > 0) {
-              var windData = data.wind.data[0];
-              var windSpeed = windData.speed || '--';
-              var windDir = windData.dir || '';
-              document.getElementById("cw-wind").textContent = windSpeed + ' km/h ' + windDir;
+            function fetchWindData() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", WIND_URL, true);
+            xhr.onload = function() {
+              if (xhr.status >= 200 && xhr.status < 400) {
+                // Parse CSV lines
+                var lines = xhr.responseText.trim().split("\n");
+                if (lines.length > 1) {
+                  // Line 0 is header: Date, Station Name, Wind Direction, Wind Speed (km/h), Maximum Gust
+                  // Find a specific station, e.g., "Central" or "Kowloon City"
+                  var targetStation = "Central"; // Change to your preferred station
+                  var stationFound = false;
+
+                  for (var i = 1; i < lines.length; i++) {
+                  var cols = lines[i].split(",");
+                    if (cols.length >= 4 && cols[1].trim() === targetStation) {
+                    var windDir = cols[2].trim();
+                    var windSpeed = cols[3].trim();
+                      
+                    document.getElementById("cw-wind").textContent = windSpeed + ' km/h ' + windDir;
+                    stationFound = true;
+                    break;
+                    }
+                  }
+                  // Fallback to first available station if target station isn't found
+                  if (!stationFound && lines[1]) {
+                    var cols = lines[1].split(",");
+                    document.getElementById("cw-wind").textContent = cols[3].trim() + ' km/h ' + cols[2].trim();
+                  }
+                }
+              } else {
+                document.getElementById("cw-wind").textContent = '-- km/h';
+              }
+            };
+            xhr.send();
             }
 
             // UV (from another endpoint if available)
@@ -1379,12 +1406,6 @@
               }
               var avgRain = list.length > 0 ? (totalRain / list.length).toFixed(1) : '--';
               document.getElementById("cw-rainfall").textContent = avgRain + ' mm';
-            }
-
-            // Visibility / Pressure (from some HKO data)
-            if (data.pressure) {
-              var pressureVal = data.pressure.data ? data.pressure.data[0].value : '--';
-              document.getElementById("qi-pressure").textContent = pressureVal + ' hPa';
             }
 
             updateLastUpdate();
