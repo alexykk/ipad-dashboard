@@ -1367,7 +1367,20 @@
             // Rainfall
             if (data.rainfall && data.rainfall.data) {
               var totalRain = 0;
-              for (var r = 0; r < data.rainfall.data.length; r++) {
+              var list = data.rainfall.data;
+              for (var r = 0; r < list.length; r++) {
+                var val = 0;
+                if (list[r].data && list[r].data[0] && typeof list[r].data[0].max === 'number') {
+                  val = list[r].data[0].max;
+                } else if (typeof list[r].max === 'number') {
+                  val = list[r].max;
+                }
+                totalRain += val;
+              }
+              var avgRain = list.length > 0 ? (totalRain / list.length).toFixed(1) : '--';
+              document.getElementById("cw-rainfall").textContent = avgRain + ' mm';
+          }
+
                 totalRain += (data.rainfall.data[r].data && data.rainfall.data[r].data[0]) ?
                   data.rainfall.data[r].data[0].max : 0;
               }
