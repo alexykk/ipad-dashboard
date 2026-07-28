@@ -1016,7 +1016,7 @@
         <div class="card news-card">
           <div class="card-header">
             <div class="card-title">
-              <span class="card-title-icon">📰</span> Yahoo! 香港新聞
+              <span class="card-title-icon">📰</span> 香港新聞
             </div>
             <div class="card-badge" id="news-count">--</div>
           </div>
@@ -1559,19 +1559,38 @@
 
             for (var i = 0; i < items.length; i++) {
               var item = items[i];
-              var pubDate = new Date(item.pubDate);
-              var hours = pubDate.getHours();
-              var minutes = pubDate.getMinutes();
-              var formattedTime = (hours < 10 ? '0' : '') + hours + ':' + (minutes < 10 ? '0' : '') + minutes;
+              // Safe date parsing: Handle 'HKT' or missing offset by forcing +08:00
+              var dateStr = item.pubDate || '';
+              if (typeof dateStr === 'string' && dateStr.includes('HKT')) {
+                dateStr = dateStr.replace('HKT', '+0800');
+              }
+              var pubDate = new Date(dateStr);
 
+              // Fallback: If JS failed to parse the date, default to current time
+              if (isNaN(pubDate.getTime())) {
+                pubDate = new Date();
+              }
+
+              // Calculate relative time accurately
               var now = new Date();
-              var diffMs = now - pubDate;
+              var diffMs = now.getTime() - pubDate.getTime();
               var diffMins = Math.floor(diffMs / 60000);
+
               var timeAgo;
-              if (diffMins < 1) timeAgo = "Just now";
-              else if (diffMins < 60) timeAgo = diffMins + 'm ago';
-              else if (diffMins < 1440) timeAgo = Math.floor(diffMins / 60) + 'h ago';
-              else timeAgo = Math.floor(diffMins / 1440) + 'd ago';
+              if (diffMins < 1) {
+                timeAgo = "Just now";
+              } else if (diffMins < 60) {
+                timeAgo = diffMins + 'm ago';
+              } else if (diffMins < 1440) {
+                timeAgo = Math.floor(diffMins / 60) + 'h ago';
+              } else {
+                timeAgo = Math.floor(diffMins / 1440) + 'd ago';
+              }
+
+              // Prevent negative time display if client clock is slightly behind
+              if (diffMins < 0) {
+                timeAgo = "Just now";
+              }
 
               var imgUrl = getThumbnailUrl(item);
 
