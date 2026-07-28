@@ -1381,13 +1381,6 @@
               document.getElementById("cw-rainfall").textContent = avgRain + ' mm';
             }
 
-                totalRain += (data.rainfall.data[r].data && data.rainfall.data[r].data[0]) ?
-                  data.rainfall.data[r].data[0].max : 0;
-              }
-              var avgRain = data.rainfall.data.length > 0 ? (totalRain / data.rainfall.data.length).toFixed(1) : '--';
-              document.getElementById("cw-rainfall").textContent = avgRain + ' mm';
-            }
-
             // Visibility / Pressure (from some HKO data)
             if (data.pressure) {
               var pressureVal = data.pressure.data ? data.pressure.data[0].value : '--';
