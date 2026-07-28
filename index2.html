@@ -1085,10 +1085,6 @@
               <div class="qi-value info" id="qi-feels-like">--°C</div>
             </div>
             <div class="qi-item">
-              <div class="qi-label">👁️ Visibility</div>
-              <div class="qi-value info" id="qi-visibility">-- km</div>
-            </div>
-            <div class="qi-item">
               <div class="qi-label">🌊 Tide</div>
               <div class="qi-value info" id="qi-tide">--</div>
             </div>
@@ -1668,23 +1664,6 @@
       document.getElementById("qi-tide").textContent = tideStatus;
     }
 
-    // Visibility estimate based on weather
-    function updateVisibility() {
-      if (cachedCurrentWeather && cachedCurrentWeather.weatherMessage) {
-        var msg = cachedCurrentWeather.weatherMessage.toLowerCase();
-        if (msg.indexOf("fog") !== -1 || msg.indexOf("mist") !== -1) {
-          document.getElementById("qi-visibility").textContent = "< 1 km";
-          document.getElementById("qi-visibility").className = "qi-value poor";
-        } else if (msg.indexOf("rain") !== -1) {
-          document.getElementById("qi-visibility").textContent = "3-5 km";
-          document.getElementById("qi-visibility").className = "qi-value moderate";
-        } else {
-          document.getElementById("qi-visibility").textContent = "> 10 km";
-          document.getElementById("qi-visibility").className = "qi-value good";
-        }
-      }
-    }
-
     // Initialize
     function init() {
       updateGreeting();
@@ -1712,7 +1691,6 @@
       setInterval(function() {
         fetchCurrentWeather();
         fetchHkoWarnings();
-        updateVisibility();
       }, 10 * 60 * 1000); // Every 10 minutes
 
       setInterval(fetchForecast, 30 * 60 * 1000); // Every 30 minutes
