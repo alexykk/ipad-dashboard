@@ -1588,8 +1588,8 @@
               newsCard.innerHTML =
                 '<img class="news-thumbnail" src="' + imgUrl + '" alt="" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=\'' + DEFAULT_THUMBNAIL + '\';">' +
                 '<div class="news-content">' +
-                  '<div class="news-item-title">' + '<span>' + item.title + '</span>' +
-                    '<span>' + timeAgo + '</span>' + '</div>' +
+                  '<div class="news-item-title">' + item.title + '</div>' +
+                  '<div class="news-item-meta">' + timeAgo + '</div>' +
                 '</div>';
 
               newsListEl.appendChild(newsCard);
