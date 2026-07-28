@@ -1354,8 +1354,8 @@
             }
 
             // UV (from another endpoint if available)
-            if (data.uvIndex && data.uvIndex.data) {
-              var uvVal = data.uvIndex.data.value || '--';
+            if (data.uvindex && data.uvindex.data) {
+              var uvVal = data.uvindex.data.value || '--';
               document.getElementById("cw-uv").textContent = uvVal;
               var uvEl = document.getElementById("cw-uv");
               if (uvVal <= 2) uvEl.className = 'cw-detail-value uv';
