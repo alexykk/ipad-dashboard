@@ -1559,38 +1559,23 @@
 
             for (var i = 0; i < items.length; i++) {
               var item = items[i];
-              // Safe date parsing: Handle 'HKT' or missing offset by forcing +08:00
-              var dateStr = item.pubDate || '';
-              if (typeof dateStr === 'string' && dateStr.includes('HKT')) {
-                dateStr = dateStr.replace('HKT', '+0800');
+              var pubDateStr = item.pubDate;
+              if (!pubDateStr.includes('GMT') && !pubDateStr.includes('+') && !pubDateStr.includes('Z')) {
+                pubDateStr += ' GMT';
               }
-              var pubDate = new Date(dateStr);
+              var pubDate = new Date(pubDateStr);
+              var hours = pubDate.getHours();
+              var minutes = pubDate.getMinutes();
+              var formattedTime = (hours < 10 ? '0' : '') + hours + ':' + (minutes < 10 ? '0' : '') + minutes;
 
-              // Fallback: If JS failed to parse the date, default to current time
-              if (isNaN(pubDate.getTime())) {
-                pubDate = new Date();
-              }
-
-              // Calculate relative time accurately
               var now = new Date();
-              var diffMs = now.getTime() - pubDate.getTime();
+              var diffMs = now - pubDate;
               var diffMins = Math.floor(diffMs / 60000);
-
               var timeAgo;
-              if (diffMins < 1) {
-                timeAgo = "Just now";
-              } else if (diffMins < 60) {
-                timeAgo = diffMins + 'm ago';
-              } else if (diffMins < 1440) {
-                timeAgo = Math.floor(diffMins / 60) + 'h ago';
-              } else {
-                timeAgo = Math.floor(diffMins / 1440) + 'd ago';
-              }
-
-              // Prevent negative time display if client clock is slightly behind
-              if (diffMins < 0) {
-                timeAgo = "Just now";
-              }
+              if (diffMins < 1) timeAgo = "Just now";
+              else if (diffMins < 60) timeAgo = diffMins + 'm ago';
+              else if (diffMins < 1440) timeAgo = Math.floor(diffMins / 60) + 'h ago';
+              else timeAgo = Math.floor(diffMins / 1440) + 'd ago';
 
               var imgUrl = getThumbnailUrl(item);
 
