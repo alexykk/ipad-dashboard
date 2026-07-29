@@ -3,139 +3,448 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <!-- iOS Fullscreen Standalone App Mode -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Dashboard">
-  
-  <title>iPad Dashboard - Hong Kong Observatory</title>
+  <title>iPad Dashboard</title>
   <style>
     :root {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --text-color: #f8fafc;
-      --accent-color: #38bdf8;
-      --warning-bg: #7f1d1d;
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #111827;
+      --card-bg: rgba(30, 41, 59, 0.85);
+      --card-bg-hover: rgba(30, 41, 59, 0.95);
+      --card-border: rgba(255, 255, 255, 0.06);
+      --card-border-hover: rgba(255, 255, 255, 0.12);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-cyan: #22d3ee;
+      --accent-green: #34d399;
+      --accent-amber: #fbbf24;
+      --accent-rose: #fb7185;
+      --accent-purple: #a78bfa;
+      --warning-bg: rgba(127, 29, 29, 0.6);
       --warning-border: #ef4444;
-      --muted-color: #94a3b8;
-      --card-border: rgba(255, 255, 255, 0.08);
+      --glass-blur: 12px;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow: hidden;
+      height: 100%;
+      width: 100%;
+      -webkit-font-smoothing: antialiased;
     }
 
     body {
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      display: -webkit-flex;
-      display: flex;
-      -webkit-justify-content: center;
-      justify-content: center;
-      -webkit-align-items: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 12px;
-      overflow: hidden; /* Prevents outer bounce scrolling on iPad */
+      background: linear-gradient(135deg, #0a0e1a 0%, #111827 40%, #0f172a 70%, #0a0e1a 100%);
+      position: relative;
     }
 
-    .container {
+    /* Animated background particles */
+    .bg-particles {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .bg-particles::before,
+    .bg-particles::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.03;
+      -webkit-animation: floatOrb 20s ease-in-out infinite;
+      animation: floatOrb 20s ease-in-out infinite;
+    }
+
+    .bg-particles::before {
+      width: 400px; height: 400px;
+      background: var(--accent-blue);
+      top: -100px; right: -100px;
+    }
+
+    .bg-particles::after {
+      width: 300px; height: 300px;
+      background: var(--accent-purple);
+      bottom: -80px; left: -80px;
+      -webkit-animation-delay: -10s;
+      animation-delay: -10s;
+    }
+
+    @-webkit-keyframes floatOrb {
+      0%, 100% { -webkit-transform: translate(0, 0) scale(1); transform: translate(0, 0) scale(1); }
+      33% { -webkit-transform: translate(30px, -30px) scale(1.05); transform: translate(30px, -30px) scale(1.05); }
+      66% { -webkit-transform: translate(-20px, 20px) scale(0.95); transform: translate(-20px, 20px) scale(0.95); }
+    }
+
+    /* Main Layout */
+    .app-container {
+      position: relative;
+      z-index: 1;
       width: 100%;
-      max-width: 980px;
-      height: 96vh;
+      height: 100%;
+      padding: 10px;
       display: -webkit-flex;
       display: flex;
       -webkit-flex-direction: column;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
-    /* Live Clock Top Banner */
-    .clock-card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 12px 20px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    /* Top Bar */
+    .top-bar {
       display: -webkit-flex;
       display: flex;
       -webkit-justify-content: space-between;
       justify-content: space-between;
       -webkit-align-items: center;
       align-items: center;
-      border: 1px solid var(--card-border);
-    }
-
-    .clock-time {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: var(--accent-color);
-      letter-spacing: 1px;
-      line-height: 1;
-    }
-
-    .clock-details {
-      text-align: right;
-    }
-
-    .clock-date {
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
-
-    .clock-location {
-      font-size: 0.85rem;
-      color: var(--muted-color);
-    }
-
-    /* Main Dashboard Section */
-    .dashboard-card {
+      padding: 8px 16px;
       background: var(--card-bg);
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      backdrop-filter: blur(var(--glass-blur));
+      border-radius: 14px;
       border: 1px solid var(--card-border);
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
     }
 
-    .weather-section {
-      -webkit-flex: 0 0 auto;
-      flex: 0 0 auto;
+    .top-bar-left {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      gap: 14px;
     }
 
-    .news-section {
-      -webkit-flex: 1 1 auto;
-      flex: 1 1 auto;
+    .greeting {
       display: -webkit-flex;
       display: flex;
       -webkit-flex-direction: column;
       flex-direction: column;
-      min-height: 0; /* Allows inner scrolling container to shrink */
     }
 
-    .section-title {
-      font-size: 1.1rem;
+    .greeting-text {
+      font-size: 1.15rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .greeting-sub {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .clock-display {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: baseline;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .clock-time {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: 1px;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+
+    .clock-seconds {
+      font-size: 1rem;
       font-weight: 600;
-      margin-bottom: 10px;
+      color: var(--accent-blue);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .clock-date-block {
+      text-align: right;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      -webkit-align-items: flex-end;
+      align-items: flex-end;
+    }
+
+    .clock-date {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .clock-location {
+      font-size: 0.65rem;
+      color: var(--text-muted);
       display: -webkit-flex;
       display: flex;
       -webkit-align-items: center;
       align-items: center;
-      gap: 8px;
+      gap: 4px;
     }
 
-    /* Weather Warning Banner */
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      display: inline-block;
+      -webkit-animation: pulse 2s ease-in-out infinite;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @-webkit-keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .top-bar-right {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .refresh-btn {
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      color: var(--accent-blue);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      gap: 5px;
+      -webkit-transition: all 0.2s;
+      transition: all 0.2s;
+    }
+
+    .refresh-btn:active {
+      background: rgba(56, 189, 248, 0.2);
+      -webkit-transform: scale(0.96);
+      transform: scale(0.96);
+    }
+
+    .refresh-btn.spinning .refresh-icon {
+      -webkit-animation: spin 1s linear infinite;
+      animation: spin 1s linear infinite;
+    }
+
+    @-webkit-keyframes spin {
+      from { -webkit-transform: rotate(0deg); transform: rotate(0deg); }
+      to { -webkit-transform: rotate(360deg); transform: rotate(360deg); }
+    }
+
+    .last-update {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    /* Main Content Grid */
+    .main-grid {
+      -webkit-flex: 1;
+      flex: 1;
+      display: -webkit-flex;
+      display: flex;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    /* Left Column */
+    .left-column {
+      width: 58%;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    /* Right Column */
+    .right-column {
+      width: 42%;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    /* Card Base */
+    .card {
+      background: var(--card-bg);
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      backdrop-filter: blur(var(--glass-blur));
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      overflow: hidden;
+      -webkit-transition: border-color 0.3s;
+      transition: border-color 0.3s;
+    }
+
+    .card-header {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      -webkit-align-items: center;
+      align-items: center;
+      padding: 10px 14px 6px;
+    }
+
+    .card-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title-icon {
+      font-size: 0.9rem;
+    }
+
+    .card-badge {
+      font-size: 0.6rem;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-weight: 600;
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent-blue);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+    }
+
+    /* Current Weather Card */
+    .current-weather-card {
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+    }
+
+    .current-weather-body {
+      padding: 6px 14px 12px;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .cw-temp-block {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+    }
+
+    .cw-temp {
+      font-size: 3.2rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--text-primary);
+    }
+
+    .cw-temp span {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .cw-condition {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .cw-icon {
+      font-size: 3.5rem;
+      line-height: 1;
+      -webkit-filter: drop-shadow(0 4px 12px rgba(56, 189, 248, 0.3));
+      filter: drop-shadow(0 4px 12px rgba(56, 189, 248, 0.3));
+    }
+
+    .cw-details {
+      -webkit-flex: 1;
+      flex: 1;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-wrap: wrap;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .cw-detail-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      -webkit-flex: 1 1 45%;
+      flex: 1 1 45%;
+      min-width: 0;
+    }
+
+    .cw-detail-label {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .cw-detail-value {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-top: 1px;
+    }
+
+    .cw-detail-value.humidity { color: var(--accent-cyan); }
+    .cw-detail-value.wind { color: var(--accent-green); }
+    .cw-detail-value.uv { color: var(--accent-amber); }
+    .cw-detail-value.rainfall { color: var(--accent-blue); }
+
+    /* Warning Banner */
     .warning-banner {
       display: none;
       background: var(--warning-bg);
       border: 1px solid var(--warning-border);
-      border-radius: 8px;
+      border-radius: 10px;
       padding: 8px 12px;
-      margin-bottom: 10px;
+      margin: 0 14px 10px;
       -webkit-align-items: center;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
+      -webkit-animation: warningPulse 3s ease-in-out infinite;
+      animation: warningPulse 3s ease-in-out infinite;
     }
 
     .warning-banner.active {
@@ -143,54 +452,80 @@
       display: flex;
     }
 
+    @-webkit-keyframes warningPulse {
+      0%, 100% { border-color: var(--warning-border); }
+      50% { border-color: rgba(239, 68, 68, 0.4); }
+    }
+
     .warning-icon {
-      font-size: 1.8rem;
+      font-size: 1.4rem;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
     }
 
     .warning-content h3 {
-      font-size: 0.85rem;
+      font-size: 0.7rem;
       color: #fca5a5;
       text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .warning-content p {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: #fef2f2;
+      margin-top: 2px;
     }
 
-    /* Weather 5-Day Row (Flexbox for stable rendering on iOS 9) */
+    /* 5-Day Forecast */
+    .forecast-card {
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+    }
+
     .forecast-grid {
       display: -webkit-flex;
       display: flex;
-      -webkit-justify-content: space-between;
-      justify-content: space-between;
-      gap: 8px;
+      gap: 6px;
+      padding: 4px 14px 12px;
     }
 
     .day-card {
       -webkit-flex: 1;
       flex: 1;
       min-width: 0;
-      background: rgba(255, 255, 255, 0.04);
-      border-radius: 8px;
-      padding: 10px 4px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 10px;
+      padding: 8px 4px;
       text-align: center;
       border: 1px solid var(--card-border);
+      -webkit-transition: all 0.2s;
+      transition: all 0.2s;
+    }
+
+    .day-card:active {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--card-border-hover);
+    }
+
+    .day-card.today {
+      background: rgba(56, 189, 248, 0.06);
+      border-color: rgba(56, 189, 248, 0.15);
     }
 
     .day-name {
-      font-weight: 600;
-      font-size: 0.95rem;
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: var(--text-primary);
     }
 
     .day-date {
-      font-size: 0.75rem;
-      color: var(--muted-color);
+      font-size: 0.65rem;
+      color: var(--text-muted);
       margin-bottom: 4px;
     }
 
     .weather-icon {
-      font-size: 1.8rem; 
+      font-size: 1.6rem;
       line-height: 1;
       margin: 4px 0;
     }
@@ -200,63 +535,98 @@
       display: flex;
       -webkit-justify-content: center;
       justify-content: center;
-      gap: 4px;
-      font-size: 0.85rem;
-      margin-bottom: 4px;
+      gap: 3px;
+      font-size: 0.75rem;
+      margin-bottom: 3px;
     }
 
     .temp-max {
-      font-weight: bold;
-      color: var(--accent-color);
+      font-weight: 700;
+      color: var(--accent-amber);
     }
 
     .temp-min {
-      color: var(--muted-color);
+      color: var(--text-muted);
     }
 
-    .humidity {
-      font-size: 0.7rem;
-      color: #a7f3d0;
-      background: rgba(16, 185, 129, 0.1);
-      padding: 2px 4px;
+    .humidity-badge {
+      font-size: 0.6rem;
+      color: var(--accent-cyan);
+      background: rgba(34, 211, 238, 0.08);
+      padding: 2px 5px;
       border-radius: 4px;
       display: inline-block;
     }
 
-    /* Scrollable News List */
+    /* News Section */
+    .news-card {
+      -webkit-flex: 1;
+      flex: 1;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      min-height: 0;
+    }
+
     .news-list {
       display: -webkit-flex;
       display: flex;
       -webkit-flex-direction: column;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       overflow-y: auto;
-      -webkit-overflow-scrolling: touch; /* Kinetic scrolling for iOS */
-      padding-right: 4px;
+      -webkit-overflow-scrolling: touch;
+      padding: 4px 14px 12px;
       -webkit-flex: 1;
       flex: 1;
+      min-height: 0;
+    }
+
+    .news-list::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    .news-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .news-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
     }
 
     .news-item {
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.02);
       border: 1px solid var(--card-border);
-      border-radius: 8px;
-      padding: 10px 12px;
+      border-radius: 10px;
+      padding: 8px 10px;
       text-decoration: none;
       color: inherit;
       display: -webkit-flex;
       display: flex;
-      gap: 12px;
+      gap: 10px;
       -webkit-align-items: center;
       align-items: center;
+      -webkit-transition: all 0.2s;
+      transition: all 0.2s;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+    }
+
+    .news-item:active {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--card-border-hover);
+      -webkit-transform: scale(0.98);
+      transform: scale(0.98);
     }
 
     .news-thumbnail {
-      width: 80px;
-      height: 55px;
+      width: 68px;
+      height: 48px;
       object-fit: cover;
-      border-radius: 6px;
-      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 7px;
+      background-color: rgba(255, 255, 255, 0.04);
       -webkit-flex-shrink: 0;
       flex-shrink: 0;
     }
@@ -266,338 +636,1031 @@
       display: flex;
       -webkit-flex-direction: column;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
       -webkit-flex: 1;
       flex: 1;
       min-width: 0;
     }
 
     .news-item-title {
-      font-size: 0.9rem;
+      font-size: 1rem;
       font-weight: 600;
-      color: var(--text-color);
+      color: var(--text-primary);
       line-height: 1.3;
-      white-space: nowrap;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
       overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .news-item-meta {
-      font-size: 0.75rem;
-      color: var(--muted-color);
+      font-size: 0.65rem;
+      color: var(--text-muted);
       display: -webkit-flex;
       display: flex;
-      -webkit-justify-content: flex-end;
-      justify-content: flex-end;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      -webkit-align-items: center;
+      align-items: center;
     }
 
+    .news-source {
+      color: var(--accent-blue);
+      font-weight: 600;
+    }
+
+    /* Right side cards */
+    .world-clock-card {
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+    }
+
+    .world-clock-grid {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-wrap: wrap;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 4px 14px 12px;
+    }
+
+    .world-clock-item {
+      -webkit-flex: 1 1 46%;
+      flex: 1 1 46%;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      min-width: 0;
+    }
+
+    .wc-city {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .wc-time {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .wc-date {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+    }
+
+    /* Quick Info Card */
+    .quick-info-card {
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+    }
+
+    .quick-info-grid {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-wrap: wrap;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 4px 14px 12px;
+    }
+
+    .qi-item {
+      -webkit-flex: 1 1 46%;
+      flex: 1 1 46%;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      min-width: 0;
+    }
+
+    .qi-label {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .qi-value {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .qi-value.good { color: var(--accent-green); }
+    .qi-value.moderate { color: var(--accent-amber); }
+    .qi-value.poor { color: var(--accent-rose); }
+    .qi-value.info { color: var(--accent-blue); }
+
+    /* Tides / Sun Card */
+    .sun-card {
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+    }
+
+    .sun-body {
+      padding: 4px 14px 12px;
+    }
+
+    .sun-arc {
+      position: relative;
+      height: 60px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+
+    .sun-arc-path {
+      position: absolute;
+      bottom: 0;
+      left: 10%;
+      right: 10%;
+      height: 100%;
+      border: 2px dashed rgba(251, 191, 36, 0.2);
+      border-radius: 50% 50% 0 0;
+      border-bottom: none;
+    }
+
+    .sun-position {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: var(--accent-amber);
+      border-radius: 50%;
+      box-shadow: 0 0 12px rgba(251, 191, 36, 0.5);
+      -webkit-transform: translate(-50%, 50%);
+      transform: translate(-50%, 50%);
+      -webkit-transition: all 1s ease;
+      transition: all 1s ease;
+    }
+
+    .sun-horizon {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .sun-times {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+    }
+
+    .sun-time-item {
+      text-align: center;
+    }
+
+    .sun-time-label {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+    }
+
+    .sun-time-value {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent-amber);
+    }
+
+    /* Loading & Error */
     .loading, .error {
       text-align: center;
-      padding: 20px;
-      color: var(--muted-color);
-      font-size: 0.9rem;
+      padding: 16px;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(56, 189, 248, 0.2);
+      border-top-color: var(--accent-blue);
+      border-radius: 50%;
+      -webkit-animation: spin 0.8s linear infinite;
+      animation: spin 0.8s linear infinite;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    /* Portrait orientation adjustments */
+    @media screen and (orientation: portrait) {
+      .main-grid {
+        -webkit-flex-direction: column;
+        flex-direction: column;
+      }
+      .left-column, .right-column {
+        width: 100%;
+      }
+      .left-column {
+        -webkit-flex: 0 0 auto;
+        flex: 0 0 auto;
+      }
+      .right-column {
+        -webkit-flex: 1;
+        flex: 1;
+        min-height: 0;
+      }
+      .cw-temp {
+        font-size: 2.5rem;
+      }
+      .cw-icon {
+        font-size: 2.8rem;
+      }
+    }
+
+    /* Landscape iPad Mini specific */
+    @media screen and (min-width: 900px) and (orientation: landscape) {
+      .app-container {
+        padding: 12px;
+        gap: 10px;
+      }
+      .clock-time {
+        font-size: 2.2rem;
+      }
+    }
+
+    /* Small adjustments for iPad Mini 1 (1024x768) */
+    @media screen and (width: 1024px) and (height: 768px) {
+      .app-container {
+        padding: 8px;
+        gap: 8px;
+      }
+      .top-bar {
+        padding: 6px 12px;
+      }
+      .clock-time {
+        font-size: 1.8rem;
+      }
+      .cw-temp {
+        font-size: 2.8rem;
+      }
+      .cw-icon {
+        font-size: 3rem;
+      }
+      .forecast-grid {
+        padding: 4px 10px 10px;
+      }
+      .news-list {
+        padding: 4px 10px 10px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    
-    <!-- Real-Time Clock Header -->
-    <div class="clock-card">
-      <div class="clock-time" id="clock-time">--:--:--</div>
-      <div class="clock-details">
-        <div class="clock-date" id="clock-date">Loading date...</div>
-        <div class="clock-location">📍 香港天文台 (HKO)</div>
-      </div>
-    </div>
+  <div class="bg-particles"></div>
 
-    <!-- Weather Card -->
-    <div class="dashboard-card weather-section">
-      <div id="warning-banner" class="warning-banner">
-        <div class="warning-icon">⚠️</div>
-        <div class="warning-content">
-          <h3>HKO Weather Warning</h3>
-          <p id="warning-text">Severe weather conditions reported.</p>
+  <div class="app-container">
+
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div class="greeting">
+          <div class="greeting-text" id="greeting-text">Good Morning</div>
+          <div class="greeting-sub" id="greeting-sub">Welcome to your dashboard</div>
+        </div>
+        <div class="clock-display">
+          <div class="clock-time" id="clock-time">--:--</div>
+          <div class="clock-seconds" id="clock-seconds">:--</div>
+        </div>
+        <div class="clock-date-block">
+          <div class="clock-date" id="clock-date">Loading...</div>
+          <div class="clock-location">
+            <span class="status-dot"></span>
+            <span>香港-赤鱲角</span>
+          </div>
         </div>
       </div>
-
-      <div id="forecast" class="forecast-grid">
-        <div class="loading">Loading Hong Kong Observatory Data...</div>
+      <div class="top-bar-right">
+        <div class="last-update" id="last-update">Last updated: --:--</div>
+        <button class="refresh-btn" id="refresh-btn" onclick="refreshAll()">
+          <span class="refresh-icon">⟳</span> Refresh
+        </button>
       </div>
     </div>
 
-    <!-- Yahoo News Card -->
-    <div class="dashboard-card news-section">
-      <h2 class="section-title">📰 Yahoo! 香港新聞 (Top News)</h2>
-      <div id="news-list" class="news-list">
-        <div class="loading">Loading news feed...</div>
+    <!-- Main Grid -->
+    <div class="main-grid">
+
+      <!-- Left Column: Weather -->
+      <div class="left-column">
+
+        <!-- Current Weather -->
+        <div class="card current-weather-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="card-title-icon">🌡️</span> 本港地區天氣報告
+            </div>
+            <div class="card-badge" id="weather-update-time">LIVE</div>
+          </div>
+          <div id="warning-banner" class="warning-banner">
+            <div class="warning-icon">⚠️</div>
+            <div class="warning-content">
+              <h3>Weather Warning Active</h3>
+              <p id="warning-text">—</p>
+            </div>
+          </div>
+          <div class="current-weather-body">
+            <div class="cw-icon" id="cw-icon">🌤️</div>
+            <div class="cw-temp-block">
+              <div class="cw-temp" id="cw-temp">--<span>°C</span></div>
+              <div class="cw-condition" id="cw-condition">Loading...</div>
+            </div>
+            <div class="cw-details">
+              <div class="cw-detail-item">
+                <div class="cw-detail-label">💧 Humidity</div>
+                <div class="cw-detail-value humidity" id="cw-humidity">--%</div>
+              </div>
+              <div class="cw-detail-item">
+                <div class="cw-detail-label">💨 Wind</div>
+                <div class="cw-detail-value wind" id="cw-wind">-- km/h</div>
+              </div>
+              <div class="cw-detail-item">
+                <div class="cw-detail-label">☀️ UV Index</div>
+                <div class="cw-detail-value uv" id="cw-uv">--</div>
+              </div>
+              <div class="cw-detail-item">
+                <div class="cw-detail-label">🌧️ Rainfall</div>
+                <div class="cw-detail-value rainfall" id="cw-rainfall">-- mm</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5-Day Forecast -->
+        <div class="card forecast-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="card-title-icon">📅</span> 九天天氣預報
+            </div>
+            <div class="card-badge">HKO</div>
+          </div>
+          <div id="forecast" class="forecast-grid">
+            <div class="loading"><span class="loading-spinner"></span>Loading forecast...</div>
+          </div>
+        </div>
+
+        <!-- News -->
+        <div class="card news-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="card-title-icon">📰</span> 香港新聞
+            </div>
+            <div class="card-badge" id="news-count">--</div>
+          </div>
+          <div id="news-list" class="news-list">
+            <div class="loading"><span class="loading-spinner"></span>Loading news...</div>
+          </div>
+        </div>
+
       </div>
+
+      <!-- Right Column: Info Panels -->
+      <div class="right-column">
+
+        <!-- Sun Position -->
+        <div class="card sun-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="card-title-icon">🌅</span> Sun Position
+            </div>
+          </div>
+          <div class="sun-body">
+            <div class="sun-arc">
+              <div class="sun-arc-path"></div>
+              <div class="sun-position" id="sun-dot"></div>
+              <div class="sun-horizon"></div>
+            </div>
+            <div class="sun-times">
+              <div class="sun-time-item">
+                <div class="sun-time-label">🌅 Sunrise</div>
+                <div class="sun-time-value" id="sunrise-time">--:--</div>
+              </div>
+              <div class="sun-time-item">
+                <div class="sun-time-label">Day Length</div>
+                <div class="sun-time-value" id="day-length">--h --m</div>
+              </div>
+              <div class="sun-time-item">
+                <div class="sun-time-label">🌇 Sunset</div>
+                <div class="sun-time-value" id="sunset-time">--:--</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- World Clocks -->
+        <div class="card world-clock-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="card-title-icon">🌍</span> World Clocks
+            </div>
+          </div>
+          <div class="world-clock-grid" id="world-clocks">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Quick Info -->
+        <div class="card quick-info-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="card-title-icon">📊</span> Quick Info
+            </div>
+          </div>
+          <div class="quick-info-grid" id="quick-info">
+            <div class="qi-item">
+              <div class="qi-label">🌡️ Feels Like</div>
+              <div class="qi-value info" id="qi-feels-like">--°C</div>
+            </div>
+            <div class="qi-item">
+              <div class="qi-label">🌊 Tide</div>
+              <div class="qi-value info" id="qi-tide">--</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
     </div>
 
   </div>
 
-  <script>
-    var NEWS_RSS_URL = "https://hk.news.yahoo.com/rss/hong-kong";
-    var NEWS_API_URL = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(NEWS_RSS_URL);
-    
-    // SVG Fallback Thumbnail inline (avoids external broken links)
-    var DEFAULT_THUMBNAIL = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='55' viewBox='0 0 80 55'><rect width='100%' height='100%' fill='%23334155'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-size='12' font-family='sans-serif'>新聞</text></svg>";
+<script>
+  // Configuration URLs
+  var NEWS_RSS_URL = "https://rthk.hk/rthk/news/rss/c_expressnews_clocal.xml";
+  var NEWS_API_URL = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(NEWS_RSS_URL);
+  var HKO_CURRENT_URL = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=en";
+  var HKO_FORECAST_URL = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=fnd&lang=en";
+  var HKO_WARNING_URL = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc";
+  var OPEN_METEO_WIND_URL = "https://api.open-meteo.com/v1/forecast?latitude=22.308&longitude=113.918&current=wind_speed_10m,wind_direction_10m";
 
-    // 1. Digital Clock Function
-    function updateClock() {
-      var now = new Date();
-      var hours = now.getHours();
-      var minutes = now.getMinutes();
-      var seconds = now.getSeconds();
+  var DEFAULT_THUMBNAIL = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='55' viewBox='0 0 80 55'><rect width='100%' height='100%' fill='%23334155'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-size='12' font-family='sans-serif'>RTHK</text></svg>";
 
-      var timeStr = (hours < 10 ? '0' : '') + hours + ':' + 
-                    (minutes < 10 ? '0' : '') + minutes + ':' + 
-                    (seconds < 10 ? '0' : '') + seconds;
+  var cachedCurrentWeather = null;
 
-      var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-      var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      var dateStr = days[now.getDay()] + ", " + months[now.getMonth()] + " " + now.getDate();
+  // Safe DOM text updater
+  function setText(id, value) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
 
-      document.getElementById("clock-time").textContent = timeStr;
-      document.getElementById("clock-date").textContent = dateStr;
+  function setHtml(id, value) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = value;
+  }
+
+  // Greeting
+  function updateGreeting() {
+    var hour = new Date().getHours();
+    var msg, sub;
+
+    if (hour >= 5 && hour < 12) {
+      msg = "Good Morning ☀️";
+      sub = "Have a great day ahead";
+    } else if (hour >= 12 && hour < 17) {
+      msg = "Good Afternoon 🌤️";
+      sub = "Stay hydrated and productive";
+    } else if (hour >= 17 && hour < 21) {
+      msg = "Good Evening 🌆";
+      sub = "Time to unwind";
+    } else {
+      msg = "Good Night 🌙";
+      sub = "Rest well tonight";
     }
+    setText("greeting-text", msg);
+    setText("greeting-sub", sub);
+  }
 
-    // Maps HKO Weather Icon Codes to Emojis
-    function getHkoEmoji(code, desc) {
-      if (code === 50) return "☀️";
-      if (code >= 51 && code <= 52) return "⛅";
-      if (code >= 53 && code <= 54) return "🌦️";
-      if (code >= 60 && code <= 61) return "☁️";
-      if (code >= 62 && code <= 65) return "🌧️";
-      if (code >= 70 && code <= 77) return "🌩️";
-      if (code >= 80 && code <= 85) return "🌫️";
-      if (code >= 90 && code <= 93) return "🌀";
+  // Clock
+  function updateClock() {
+    var now = new Date();
+    var h = now.getHours();
+    var m = now.getMinutes();
+    var s = now.getSeconds();
 
-      if (desc) {
-        var lower = desc.toLowerCase();
-        if (lower.indexOf("thunder") !== -1) return "🌩️";
-        if (lower.indexOf("rain") !== -1 || lower.indexOf("shower") !== -1) return "🌧️";
-        if (lower.indexOf("cloud") !== -1) return "☁️";
-        if (lower.indexOf("fine") !== -1 || lower.indexOf("sunny") !== -1) return "☀️";
+    setText("clock-time", (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m);
+    setText("clock-seconds", ':' + (s < 10 ? '0' : '') + s);
+
+    var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    setText("clock-date", days[now.getDay()] + ", " + months[now.getMonth()] + " " + now.getDate() + " " + now.getFullYear());
+  }
+
+  // Sun position calculation
+  function updateSunPosition() {
+    var now = new Date();
+    var dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+    var sunriseHour = 6.5 - 0.75 * Math.cos((dayOfYear - 172) * 2 * Math.PI / 365);
+    var sunsetHour = 18.25 + 0.75 * Math.cos((dayOfYear - 172) * 2 * Math.PI / 365);
+
+    var sunriseH = Math.floor(sunriseHour);
+    var sunriseM = Math.round((sunriseHour - sunriseH) * 60);
+    var sunsetH = Math.floor(sunsetHour);
+    var sunsetM = Math.round((sunsetHour - sunsetH) * 60);
+
+    setText("sunrise-time", (sunriseH < 10 ? '0' : '') + sunriseH + ':' + (sunriseM < 10 ? '0' : '') + sunriseM);
+    setText("sunset-time", (sunsetH < 10 ? '0' : '') + sunsetH + ':' + (sunsetM < 10 ? '0' : '') + sunsetM);
+
+    var dayLenMinutes = Math.round((sunsetHour - sunriseHour) * 60);
+    var dayLenH = Math.floor(dayLenMinutes / 60);
+    var dayLenM = dayLenMinutes % 60;
+    setText("day-length", dayLenH + 'h ' + dayLenM + 'm');
+
+    var currentHour = now.getHours() + now.getMinutes() / 60;
+    var sunDot = document.getElementById("sun-dot");
+    if (!sunDot || !sunDot.parentElement) return;
+
+    var arcContainer = sunDot.parentElement;
+
+    if (currentHour >= sunriseHour && currentHour <= sunsetHour) {
+      var progress = (currentHour - sunriseHour) / (sunsetHour - sunriseHour);
+      var angle = Math.PI * (1 - progress);
+      var arcWidth = arcContainer.offsetWidth * 0.8;
+      var arcHeight = arcContainer.offsetHeight;
+      var cx = arcContainer.offsetWidth * 0.5;
+      var cy = arcContainer.offsetHeight;
+      var rx = arcWidth / 2;
+      var ry = arcHeight;
+
+      var x = cx + rx * Math.cos(angle);
+      var y = cy - ry * Math.sin(angle);
+
+      sunDot.style.left = x + 'px';
+      sunDot.style.top = y + 'px';
+      sunDot.style.display = 'block';
+      sunDot.style.background = 'var(--accent-amber)';
+      sunDot.style.boxShadow = '0 0 12px rgba(251, 191, 36, 0.6)';
+    } else {
+      sunDot.style.display = 'block';
+      sunDot.style.background = 'var(--text-muted)';
+      sunDot.style.boxShadow = '0 0 8px rgba(100, 116, 139, 0.3)';
+      if (currentHour < sunriseHour) {
+        sunDot.style.left = '10%';
+        sunDot.style.top = '95%';
+      } else {
+        sunDot.style.left = '90%';
+        sunDot.style.top = '95%';
       }
-      return "🌡️";
     }
+  }
 
-    // 2. Fetch Forecast & Warnings
-    function fetch5DayForecast() {
-      var forecastEl = document.getElementById("forecast");
-      var apiUrl = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=fnd&lang=en";
+  // World Clocks
+  function updateWorldClocks() {
+    var cities = [
+      { name: "London", tz: "Europe/London", flag: "🇬🇧" },
+      { name: "New York", tz: "America/New_York", flag: "🇺🇸" },
+      { name: "Tokyo", tz: "Asia/Tokyo", flag: "🇯🇵" },
+      { name: "Sydney", tz: "Australia/Sydney", flag: "🇦🇺" }
+    ];
 
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", apiUrl, true);
-      xhr.onload = function() {
-        if (xhr.status >= 200 && xhr.status < 400) {
-          try {
-            var data = JSON.parse(xhr.responseText);
-            var forecastList = data.weatherForecast;
+    var container = document.getElementById("world-clocks");
+    if (!container) return;
+    container.innerHTML = '';
 
-            if (!forecastList || forecastList.length === 0) {
-              forecastEl.innerHTML = '<div class="error">No forecast data available.</div>';
-              return;
-            }
+    var now = new Date();
 
-            while (forecastEl.firstChild) {
-              forecastEl.removeChild(forecastEl.firstChild);
-            }
+    for (var i = 0; i < cities.length; i++) {
+      var city = cities[i];
+      var cityTime;
+      try {
+        cityTime = new Date(now.toLocaleString("en-US", { timeZone: city.tz }));
+      } catch(e) {
+        cityTime = now;
+      }
 
-            var count = Math.min(5, forecastList.length);
-            for (var i = 0; i < count; i++) {
-              var item = forecastList[i];
+      var h = cityTime.getHours();
+      var m = cityTime.getMinutes();
+      var timeStr = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+      var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      var dateStr = days[cityTime.getDay()];
 
-              var dateStr = item.forecastDate;
-              var month = dateStr.substring(4, 6);
-              var day = dateStr.substring(6, 8);
-              var monthDay = month + "/" + day;
+      var el = document.createElement("div");
+      el.className = "world-clock-item";
+      el.innerHTML =
+        '<div class="wc-city">' + city.flag + ' ' + city.name + '</div>' +
+        '<div class="wc-time">' + timeStr + '</div>' +
+        '<div class="wc-date">' + dateStr + '</div>';
+      container.appendChild(el);
+    }
+  }
 
-              var weekDay = item.week;
-              var shortDay = weekDay.substring(0, 3);
-              var displayName = shortDay;
+  // Weather Emoji Mapping
+  function getHkoEmoji(code, desc) {
+    var c = parseInt(code, 10);
+    if (c === 50) return "☀️";
+    if (c === 51 || c === 77) return "⛅";
+    if (c === 52 || c === 76) return "⛅";
+    if (c >= 53 && c <= 54) return "🌦️";
+    if (c === 60 || c === 61) return "☁️";
+    if (c >= 62 && c <= 64) return "🌧️";
+    if (c === 65) return "🌩️";
+    if (c >= 70 && c <= 75) return "🌙";
+    if (c === 80) return "💨";
+    if (c === 81) return "🌵";
+    if (c === 82) return "💧";
+    if (c >= 83 && c <= 85) return "🌫️";
+    if (c >= 90 && c <= 91) return "🔥";
+    if (c >= 92 && c <= 93) return "❄️";
 
-              var maxTemp = item.forecastMaxtemp.value;
-              var minTemp = item.forecastMintemp.value;
-              var maxRh = item.forecastMaxrh.value;
-              var minRh = item.forecastMinrh.value;
-              var iconCode = item.ForecastIcon;
-              var weatherDesc = item.forecastWeather || "";
+    if (desc) {
+      var lower = desc.toLowerCase();
+      if (lower.indexOf("thunder") !== -1) return "🌩️";
+      if (lower.indexOf("rain") !== -1 || lower.indexOf("shower") !== -1) return "🌧️";
+      if (lower.indexOf("cloud") !== -1) return "☁️";
+      if (lower.indexOf("fine") !== -1 || lower.indexOf("sunny") !== -1) return "☀️";
+    }
+    return "🌡️";
+  }
 
-              var iconEmoji = getHkoEmoji(iconCode, weatherDesc);
+  function getHkoConditionText(code) {
+    var c = parseInt(code, 10);
+    if (c === 50) return "陽光充沛";
+    if (c === 51) return "間有陽光";
+    if (c === 52) return "短暫陽光";
+    if (c === 53) return "間有陽光幾陣驟雨";
+    if (c === 54) return "短暫陽光有驟雨";
+    if (c === 60) return "多雲";
+    if (c === 61) return "密雲";
+    if (c === 62) return "微雨";
+    if (c === 63) return "雨";
+    if (c === 64) return "大雨";
+    if (c === 65) return "雷暴";
+    if (c >= 70 && c <= 75) return "天色良好";
+    if (c === 76) return "大致多雲";
+    if (c === 77) return "天色大致良好";
+    if (c === 80) return "大風";
+    if (c === 81) return "乾燥";
+    if (c === 82) return "潮濕";
+    if (c === 83) return "霧";
+    if (c === 84) return "薄霧";
+    if (c === 85) return "煙霞";
+    if (c === 90) return "熱";
+    if (c === 91) return "暖";
+    if (c === 92) return "涼";
+    if (c === 93) return "冷";
+    return "Partly Cloudy";
+  }
 
-              var card = document.createElement("div");
-              card.className = "day-card";
-              card.innerHTML = 
-                '<div class="day-name">' + displayName + '</div>' +
-                '<div class="day-date">' + monthDay + '</div>' +
-                '<div class="weather-icon" title="' + weatherDesc + '">' + iconEmoji + '</div>' +
-                '<div class="temp-range">' +
-                  '<span class="temp-max">' + maxTemp + '°C</span>' +
-                  '<span class="temp-min">' + minTemp + '°C</span>' +
-                '</div>' +
-                '<div class="humidity">💧 ' + minRh + '-' + maxRh + '%</div>';
+  function getWindDirectionText(degree) {
+    var directions = ['北', '東北', '東', '東南', '南' ,'西南', '西', '西北'];
+    var index = Math.round(degree / 45) % 8;
+    return directions[index];
+  }
 
-              forecastEl.appendChild(card);
-            }
-          } catch(e) {
-            forecastEl.innerHTML = '<div class="error">Error processing HKO data.</div>';
+  function fetchWindData() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", OPEN_METEO_WIND_URL, true);
+    xhr.onload = function() {
+      if (xhr.status >= 200 && xhr.status < 400) {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          if (data && data.current) {
+            var speed = Math.round(data.current.wind_speed_10m);
+            var dirDegree = data.current.wind_direction_10m;
+            var direction = getWindDirectionText(dirDegree);
+            setText("cw-wind", speed + ' km/h ' + direction);
           }
-        } else {
-          forecastEl.innerHTML = '<div class="error">Error loading HKO forecast.</div>';
+        } catch (e) {
+          setText("cw-wind", '-- km/h');
         }
-      };
-      xhr.onerror = function() {
-        forecastEl.innerHTML = '<div class="error">Network error connecting to HKO.</div>';
-      };
-      xhr.send();
+      } else {
+        setText("cw-wind", '-- km/h');
+      }
+    };
+    xhr.onerror = function() { setText("cw-wind", '-- km/h'); };
+    xhr.send();
+  }
 
-      fetchHkoWarnings();
-    }
+  function fetchCurrentWeather() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", HKO_CURRENT_URL, true);
+    xhr.onload = function() {
+      if (xhr.status >= 200 && xhr.status < 400) {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          cachedCurrentWeather = data;
 
-    // Fetch Weather Warnings
-    function fetchHkoWarnings() {
-      var warningBanner = document.getElementById("warning-banner");
-      var warningText = document.getElementById("warning-text");
-      var warnUrl = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=en";
-
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", warnUrl, true);
-      xhr.onload = function() {
-        if (xhr.status >= 200 && xhr.status < 400) {
-          try {
-            var data = JSON.parse(xhr.responseText);
-            var activeWarns = [];
-
-            for (var key in data) {
-              if (data.hasOwnProperty(key) && data[key]) {
-                var warnObj = data[key];
-                if (warnObj.name) {
-                  activeWarns.push(warnObj.name);
-                }
+          var tempData = data.temperature;
+          var temp = '--';
+          if (tempData && tempData.data && tempData.data.length > 0) {
+            for (var i = 0; i < tempData.data.length; i++) {
+              if (tempData.data[i].place && tempData.data[i].place.indexOf("Chek Lap Kok") !== -1) {
+                temp = tempData.data[i].value;
+                break;
               }
             }
-
-            if (activeWarns.length > 0) {
-              warningText.textContent = activeWarns.join(" | ");
-              warningBanner.className = "warning-banner active";
-            } else {
-              warningBanner.className = "warning-banner";
+            if (temp === '--' && tempData.data[0]) {
+              temp = tempData.data[0].value;
             }
-          } catch(e) {}
-        }
-      };
-      xhr.send();
-    }
-
-    // Decode HTML entities (e.g. &lt;img src="..."&gt;)
-    function decodeHtml(html) {
-      var txt = document.createElement("textarea");
-      txt.innerHTML = html;
-      return txt.value;
-    }
-
-    // Advanced Multi-stage Thumbnail Extractor
-    function getThumbnailUrl(item) {
-      if (item.thumbnail && typeof item.thumbnail === 'string' && item.thumbnail.length > 5) {
-        return item.thumbnail;
-      }
-      if (item.enclosure && item.enclosure.link) {
-        return item.enclosure.link;
-      }
-      
-      // Look inside custom media tags if present
-      if (item.media && item.media.content && item.media.content.url) {
-        return item.media.content.url;
-      }
-
-      // Extract <img> from content or description
-      var rawHtml = (item.content || "") + " " + (item.description || "");
-      var decodedHtml = decodeHtml(rawHtml);
-      
-      var match = decodedHtml.match(/<img[^>]+src=["']([^"']+)["']/i);
-      if (match && match[1]) {
-        var url = match[1];
-        // Upgrade http to https to avoid iOS mixed content blocks
-        if (url.indexOf("http://") === 0) {
-          url = "https://" + url.substring(7);
-        }
-        return url;
-      }
-
-      return DEFAULT_THUMBNAIL;
-    }
-
-    // 3. Fetch News Feed
-    function fetchNewsFeed() {
-      var newsListEl = document.getElementById("news-list");
-
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", NEWS_API_URL, true);
-      xhr.onload = function() {
-        if (xhr.status >= 200 && xhr.status < 400) {
-          try {
-            var data = JSON.parse(xhr.responseText);
-
-            if (!data.items || data.items.length === 0) {
-              newsListEl.innerHTML = '<div class="error">No news headlines available.</div>';
-              return;
-            }
-
-            while (newsListEl.firstChild) {
-              newsListEl.removeChild(newsListEl.firstChild);
-            }
-
-            var items = data.items.slice(0, 10);
-            for (var i = 0; i < items.length; i++) {
-              var item = items[i];
-              var pubDate = new Date(item.pubDate);
-              var hours = pubDate.getHours();
-              var minutes = pubDate.getMinutes();
-              var formattedTime = (hours < 10 ? '0' : '') + hours + ':' + (minutes < 10 ? '0' : '') + minutes;
-              var imgUrl = getThumbnailUrl(item);
-
-              var newsCard = document.createElement("a");
-              newsCard.className = "news-item";
-              newsCard.href = item.link;
-              newsCard.target = "_blank";
-              newsCard.rel = "noopener noreferrer";
-
-              newsCard.innerHTML = 
-                '<img class="news-thumbnail" src="' + imgUrl + '" alt="Thumbnail" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=\'' + DEFAULT_THUMBNAIL + '\';">' +
-                '<div class="news-content">' +
-                  '<div class="news-item-title">' + item.title + '</div>' +
-                  '<div class="news-item-meta">' +
-                    '<span>' + formattedTime + '</span>' +
-                  '</div>' +
-                '</div>';
-
-              newsListEl.appendChild(newsCard);
-            }
-          } catch(e) {
-            newsListEl.innerHTML = '<div class="error">Error processing news data.</div>';
           }
-        } else {
-          newsListEl.innerHTML = '<div class="error">Unable to load news feed.</div>';
-        }
-      };
-      xhr.onerror = function() {
-        newsListEl.innerHTML = '<div class="error">Network error loading news.</div>';
-      };
-      xhr.send();
-    }
+          setHtml("cw-temp", temp + '<span>°C</span>');
 
-    // Initial Execution
-    updateClock();
-    fetch5DayForecast();
+          var humidity = '--';
+          if (data.humidity && data.humidity.data && data.humidity.data.length > 0) {
+            humidity = data.humidity.data[0].value;
+          }
+          setText("cw-humidity", humidity + '%');
+
+          if (temp !== '--' && humidity !== '--') {
+            var feelsLike;
+            if (temp > 27) {
+              feelsLike = Math.round(temp + (humidity - 60) * 0.1);
+            } else if (temp < 15) {
+              feelsLike = Math.round(temp - 1);
+            } else {
+              feelsLike = temp;
+            }
+            setText("qi-feels-like", feelsLike + '°C');
+          }
+
+          var weatherIcon = "🌤️";
+          var condition = "Partly Cloudy";
+          if (data.icon && data.icon.length > 0) {
+            weatherIcon = getHkoEmoji(data.icon[0], "");
+            condition = getHkoConditionText(data.icon[0]); 
+          }
+          setText("cw-icon", weatherIcon);
+          setText("cw-condition", condition);
+
+          if (data.uvindex && data.uvindex.data && data.uvindex.data.length > 0) {
+            setText("cw-uv", data.uvindex.data[0].value || '--');
+          }
+
+          if (data.rainfall && data.rainfall.data) {
+            var totalRain = 0;
+            var list = data.rainfall.data;
+            for (var r = 0; r < list.length; r++) {
+              totalRain += list[r].max || 0;
+            }
+            var avgRain = list.length > 0 ? (totalRain / list.length).toFixed(1) : '--';
+            setText("cw-rainfall", avgRain + ' mm');
+          }
+
+          fetchWindData();
+          updateLastUpdate();
+        } catch(e) {
+          setText("cw-condition", "Error parsing data");
+        }
+      }
+    };
+    xhr.onerror = function() { setText("cw-condition", "Network error"); };
+    xhr.send();
+  }
+
+  function fetchHkoWarnings() {
+    var warningBanner = document.getElementById("warning-banner");
+    var warningText = document.getElementById("warning-text");
+    if (!warningBanner || !warningText) return;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", HKO_WARNING_URL, true);
+    xhr.onload = function() {
+      if (xhr.status >= 200 && xhr.status < 400) {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          var activeWarns = [];
+          for (var key in data) {
+            if (data.hasOwnProperty(key) && data[key] && data[key].name) {
+              activeWarns.push(data[key].name);
+            }
+          }
+          if (activeWarns.length > 0) {
+            warningText.textContent = activeWarns.join(" | ");
+            warningBanner.className = "warning-banner active";
+          } else {
+            warningBanner.className = "warning-banner";
+          }
+        } catch(e) {}
+      }
+    };
+    xhr.send();
+  }
+
+  function fetchForecast() {
+    var forecastEl = document.getElementById("forecast");
+    if (!forecastEl) return;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", HKO_FORECAST_URL, true);
+    xhr.onload = function() {
+      if (xhr.status >= 200 && xhr.status < 400) {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          var forecastList = data.weatherForecast;
+
+          if (!forecastList || forecastList.length === 0) {
+            forecastEl.innerHTML = '<div class="error">No forecast data.</div>';
+            return;
+          }
+
+          forecastEl.innerHTML = '';
+          var count = Math.min(9, forecastList.length);
+
+          for (var i = 0; i < count; i++) {
+            var item = forecastList[i];
+            var dateStr = item.forecastDate;
+            var monthDay = parseInt(dateStr.substring(4, 6), 10) + '/' + parseInt(dateStr.substring(6, 8), 10);
+            var shortDay = (item.week || "").substring(0, 3);
+
+            var card = document.createElement("div");
+            card.className = "day-card";
+            card.innerHTML =
+              '<div class="day-name">' + shortDay + '</div>' +
+              '<div class="day-date">' + monthDay + '</div>' +
+              '<div class="weather-icon" title="' + (item.forecastWeather || '') + '">' + getHkoEmoji(item.ForecastIcon, item.forecastWeather) + '</div>' +
+              '<div class="temp-range">' +
+                '<span class="temp-max">' + item.forecastMaxtemp.value + '°</span>' +
+                '<span class="temp-min">' + item.forecastMintemp.value + '°</span>' +
+              '</div>' +
+              '<div class="humidity-badge">💧' + item.forecastMinrh.value + '-' + item.forecastMaxrh.value + '%</div>';
+
+            forecastEl.appendChild(card);
+          }
+        } catch(e) {
+          forecastEl.innerHTML = '<div class="error">Error processing data.</div>';
+        }
+      } else {
+        forecastEl.innerHTML = '<div class="error">Error loading forecast.</div>';
+      }
+    };
+    xhr.onerror = function() { forecastEl.innerHTML = '<div class="error">Network error.</div>'; };
+    xhr.send();
+  }
+
+  function decodeHtml(html) {
+    var txt = document.createElement("textarea");
+    txt.innerHTML = html;
+    return txt.value;
+  }
+
+  function getThumbnailUrl(item) {
+    if (item.thumbnail && typeof item.thumbnail === 'string' && item.thumbnail.length > 5) return item.thumbnail;
+    if (item.enclosure && item.enclosure.link) return item.enclosure.link;
+    if (item.media && item.media.content && item.media.content.url) return item.media.content.url;
+
+    var rawHtml = (item.content || "") + " " + (item.description || "");
+    var decodedHtml = decodeHtml(rawHtml);
+    var match = decodedHtml.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (match && match[1]) {
+      var url = match[1];
+      return url.indexOf("http://") === 0 ? "https://" + url.substring(7) : url;
+    }
+    return DEFAULT_THUMBNAIL;
+  }
+
+  function safeParseDate(dateStr) {
+    if (!dateStr) return new Date();
+    // Reformat YYYY-MM-DD to YYYY/MM/DD for legacy WebKit string parsing stability
+    var cleanStr = dateStr.replace(/-/g, '/');
+    if (!cleanStr.includes('GMT') && !cleanStr.includes('+') && !cleanStr.includes('Z')) {
+      cleanStr += ' GMT';
+    }
+    var d = new Date(cleanStr);
+    return isNaN(d.getTime()) ? new Date() : d;
+  }
+
+  function fetchNewsFeed() {
+    var newsListEl = document.getElementById("news-list");
+    if (!newsListEl) return;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", NEWS_API_URL, true);
+    xhr.onload = function() {
+      if (xhr.status >= 200 && xhr.status < 400) {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          if (!data.items || data.items.length === 0) {
+            newsListEl.innerHTML = '<div class="error">No news available.</div>';
+            return;
+          }
+
+          newsListEl.innerHTML = '';
+          var items = data.items.slice(0, 15);
+          setText("news-count", items.length + ' articles');
+
+          var now = new Date();
+          for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            var pubDate = safeParseDate(item.pubDate);
+            var diffMins = Math.floor((now - pubDate) / 60000);
+
+            var timeAgo;
+            if (diffMins < 1) timeAgo = "Just now";
+            else if (diffMins < 60) timeAgo = diffMins + 'm ago';
+            else if (diffMins < 1440) timeAgo = Math.floor(diffMins / 60) + 'h ago';
+            else timeAgo = Math.floor(diffMins / 1440) + 'd ago';
+
+            var imgUrl = getThumbnailUrl(item);
+            var newsCard = document.createElement("a");
+            newsCard.className = "news-item";
+            newsCard.href = item.link;
+            newsCard.target = "_blank";
+            newsCard.rel = "noopener noreferrer";
+
+            newsCard.innerHTML =
+              '<img class="news-thumbnail" src="' + imgUrl + '" alt="" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=\'' + DEFAULT_THUMBNAIL + '\';">' +
+              '<div class="news-content">' +
+                '<div class="news-item-title">' + item.title + '</div>' +
+                '<div class="news-item-meta">' + timeAgo + '</div>' +
+              '</div>';
+
+            newsListEl.appendChild(newsCard);
+          }
+        } catch(e) {
+          newsListEl.innerHTML = '<div class="error">Error processing news.</div>';
+        }
+      } else {
+        newsListEl.innerHTML = '<div class="error">Unable to load news.</div>';
+      }
+    };
+    xhr.onerror = function() { newsListEl.innerHTML = '<div class="error">Network error.</div>'; };
+    xhr.send();
+  }
+
+  function updateLastUpdate() {
+    var now = new Date();
+    var h = now.getHours();
+    var m = now.getMinutes();
+    setText("last-update", "Updated: " + (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m);
+  }
+
+  function refreshAll() {
+    var btn = document.getElementById("refresh-btn");
+    if (btn) btn.className = "refresh-btn spinning";
+
+    fetchCurrentWeather();
+    fetchHkoWarnings();
+    fetchForecast();
     fetchNewsFeed();
 
-    // Auto-Refresh Timers for Ambient Display
-    setInterval(updateClock, 1000);                     // Clock: Every second
-    setInterval(fetch5DayForecast, 15 * 60 * 1000);     // Weather: Every 15 minutes
-    setInterval(fetchNewsFeed, 10 * 60 * 1000);        // News: Every 10 minutes
-  </script>
+    setTimeout(function() {
+      if (btn) btn.className = "refresh-btn";
+    }, 1500);
+  }
+
+  function updateTideInfo() {
+    var now = new Date();
+    var hour = now.getHours() + now.getMinutes() / 60;
+    var tidePhase = (hour % 12.42) / 12.42 * 2 * Math.PI;
+    var tideHeight = Math.cos(tidePhase);
+    var tideStatus;
+
+    if (tideHeight > 0.3) tideStatus = "High 🌊";
+    else if (tideHeight < -0.3) tideStatus = "Low 🏖️";
+    else if (Math.sin(tidePhase) > 0) tideStatus = "Rising ↑";
+    else tideStatus = "Falling ↓";
+
+    setText("qi-tide", tideStatus);
+  }
+
+  function init() {
+    updateGreeting();
+    updateClock();
+    updateSunPosition();
+    updateWorldClocks();
+    updateTideInfo();
+
+    fetchCurrentWeather();
+    fetchHkoWarnings();
+    fetchForecast();
+    fetchNewsFeed();
+
+    setInterval(function() {
+      updateClock();
+      updateGreeting();
+    }, 1000);
+
+    setInterval(updateSunPosition, 60000);
+    setInterval(updateWorldClocks, 30000);
+    setInterval(updateTideInfo, 300000);
+
+    setInterval(function() {
+      fetchCurrentWeather();
+      fetchHkoWarnings();
+    }, 10 * 60 * 1000);
+
+    setInterval(fetchForecast, 30 * 60 * 1000);
+    setInterval(fetchNewsFeed, 8 * 60 * 1000);
+  }
+
+  // Safe DOM Load execution
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+</script>
 </body>
 </html>
