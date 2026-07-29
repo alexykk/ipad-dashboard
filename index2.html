@@ -939,7 +939,7 @@
           <div class="clock-date" id="clock-date">Loading...</div>
           <div class="clock-location">
             <span class="status-dot"></span>
-            <span>香港天文台 HKO</span>
+            <span>香港-赤鱲角</span>
           </div>
         </div>
       </div>
@@ -1293,7 +1293,7 @@
             if (tempData && tempData.data && tempData.data.length > 0) {
               // Find "King's Park" station (usually first or named)
               for (var i = 0; i < tempData.data.length; i++) {
-                if (tempData.data[i].place === "King's Park" || tempData.data[i].place.indexOf("King") !== -1) {
+                if (tempData.data[i].place === "Chek Lap Kok" || tempData.data[i].place.indexOf("King") !== -1) {
                   temp = tempData.data[i].value;
                   break;
                 }
