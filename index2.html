@@ -1104,8 +1104,7 @@
     var HKO_CURRENT_URL = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=en";
     var HKO_FORECAST_URL = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=fnd&lang=en";
     var HKO_WARNING_URL = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc";
-    var TARGET_CSV_URL = "https://data.weather.gov.hk/weatherAPI/hko_data/regional-weather/latest_10min_wind.csv";
-    var WIND_URL = "https://corsproxy.io/?" + encodeURIComponent(TARGET_CSV_URL);
+    var OPEN_METEO_WIND_URL = "https://api.open-meteo.com/v1/forecast?latitude=22.308&longitude=113.918&current=wind_speed_10m,wind_direction_10m";
 
     var DEFAULT_THUMBNAIL = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='55' viewBox='0 0 80 55'><rect width='100%' height='100%' fill='%23334155'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-size='12' font-family='sans-serif'>RTHK</text></svg>";
 
@@ -1309,54 +1308,34 @@
       return "Partly Cloudy";
     }
 
+    // Helper function to convert wind degrees (0-360) to direction text
+    function getWindDirectionText(degree) {
+      var directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+      var index = Math.round(degree / 45) % 8;
+      return directions[index];
+    }
+
     function fetchWindData() {
       var xhr = new XMLHttpRequest();
-      xhr.open("GET", WIND_URL, true);
-  
+      xhr.open("GET", OPEN_METEO_WIND_URL, true);
       xhr.onload = function() {
-      if (xhr.status >= 200 && xhr.status < 400) {
-        // Clean carriage returns (\r) and split into lines
-        var rawText = xhr.responseText.replace(/\r/g, "");
-        var lines = rawText.split("\n");
-      
-        var targetStation = "Chek Lap Kok";
-        var stationFound = false;
-
-        for (var i = 1; i < lines.length; i++) {
-          if (!lines[i].trim()) continue;
-
-          var cols = lines[i].split(",");
+        if (xhr.status >= 200 && xhr.status < 400) {
+          try {
+            var data = JSON.parse(xhr.responseText);
         
-          if (cols.length >= 4) {
-            var stationName = cols[0].replace(/"/g, "").trim();
-            var windDir = cols[2].replace(/"/g, "").trim();
-            var windSpeed = cols[3].replace(/"/g, "").trim();
+            if (data && data.current) {
+              var speed = Math.round(data.current.wind_speed_10m); // Speed in km/h
+              var dirDegree = data.current.wind_direction_10m;
+              var direction = getWindDirectionText(dirDegree);
 
-            if (stationName === targetStation || stationName.indexOf("Chek") !== -1) {
-              document.getElementById("cw-wind").textContent = windSpeed + ' km/h ' + windDir;
-              stationFound = true;
-              break;
+              document.getElementById("cw-wind").textContent = speed + ' km/h ' + direction;
             }
+          } catch (e) {
+            document.getElementById("cw-wind").textContent = '-- km/h';
           }
+        } else {
+          document.getElementById("cw-wind").textContent = '-- km/h';
         }
-
-        // Fallback to first available station row if Chek Lap Kok wasn't matched
-        if (!stationFound && lines.length > 1) {
-          for (var j = 1; j < lines.length; j++) {
-            var fbCols = lines[j].split(",");
-            if (fbCols.length >= 4) {
-              var fSpeed = fbCols[3].replace(/"/g, "").trim();
-              var fDir = fbCols[2].replace(/"/g, "").trim();
-              if (fSpeed && fDir) {
-                document.getElementById("cw-wind").textContent = fSpeed + ' km/h ' + fDir;
-                break;
-              }
-            }
-          }
-        }
-      } else {
-        document.getElementById("cw-wind").textContent = '-- km/h';
-      }
       };
       xhr.onerror = function() {
         document.getElementById("cw-wind").textContent = '-- km/h';
