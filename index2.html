@@ -1313,37 +1313,45 @@
       xhr.open("GET", WIND_URL, true);
       xhr.onload = function() {
       if (xhr.status >= 200 && xhr.status < 400) {
-        var lines = xhr.responseText.trim().split("\n");
-        if (lines.length > 1) {
-          var targetStation = "Chek Lap Kok";
-          var stationFound = false;
+      var lines = xhr.responseText.replace(/\r/g, "").trim().split("\n");
+      
+      if (lines.length > 1) {
+        var targetStation = "Chek Lap Kok";
+        var stationFound = false;
 
-          for (var i = 1; i < lines.length; i++) {
-            var cols = lines[i].split(",");
-            // CSV structure: Date/Time, Station Name, Wind Direction, Wind Speed (km/h)
-            if (cols.length >= 4 && cols[1].replace(/"/g, "").trim() === targetStation) {
-              var windDir = cols[2].replace(/"/g, "").trim();
-              var windSpeed = cols[3].replace(/"/g, "").trim();
-            
+        for (var i = 1; i < lines.length; i++) {
+          var cols = lines[i].split(",");
+          
+          if (cols.length >= 4) {
+            // Remove quotes surrounding string values
+            var stationName = cols[0].replace(/"/g, "").trim();
+            var windDir = cols[2].replace(/"/g, "").trim();
+            var windSpeed = cols[3].replace(/"/g, "").trim();
+
+            if (stationName === targetStation || stationName.indexOf("Chek") !== -1) {
               document.getElementById("cw-wind").textContent = windSpeed + ' km/h ' + windDir;
               stationFound = true;
               break;
             }
           }
-        
-          if (!stationFound && lines[1]) {
-            var fallbackCols = lines[1].split(",");
-            if (fallbackCols.length >= 4) {
-              document.getElementById("cw-wind").textContent = fallbackCols[3].replace(/"/g, "").trim() + ' km/h ' + fallbackCols[2].replace(/"/g, "").trim();
-            }
+        }
+
+        // Fallback to first data row if Chek Lap Kok isn't found
+        if (!stationFound && lines[1]) {
+          var fallbackCols = lines[1].split(",");
+          if (fallbackCols.length >= 4) {
+            var fDir = fallbackCols[2].replace(/"/g, "").trim();
+            var fSpeed = fallbackCols[3].replace(/"/g, "").trim();
+            document.getElementById("cw-wind").textContent = fSpeed + ' km/h ' + fDir;
           }
         }
+      }
       } else {
         document.getElementById("cw-wind").textContent = '-- km/h';
       }
       };
       xhr.onerror = function() {
-      document.getElementById("cw-wind").textContent = '-- km/h';
+        document.getElementById("cw-wind").textContent = '-- km/h';
       };
       xhr.send();
     }
