@@ -1104,7 +1104,8 @@
     var HKO_CURRENT_URL = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=en";
     var HKO_FORECAST_URL = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=fnd&lang=en";
     var HKO_WARNING_URL = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=warnsum&lang=tc";
-    var WIND_URL = "https://data.weather.gov.hk/weatherAPI/hko_data/regional-weather/latest_10min_wind.csv";
+    var TARGET_CSV_URL = "https://data.weather.gov.hk/weatherAPI/hko_data/regional-weather/latest_10min_wind.csv";
+    var WIND_URL = "https://corsproxy.io/?" + encodeURIComponent(TARGET_CSV_URL);
 
     var DEFAULT_THUMBNAIL = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='55' viewBox='0 0 80 55'><rect width='100%' height='100%' fill='%23334155'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-size='12' font-family='sans-serif'>RTHK</text></svg>";
 
@@ -1311,19 +1312,22 @@
     function fetchWindData() {
       var xhr = new XMLHttpRequest();
       xhr.open("GET", WIND_URL, true);
+  
       xhr.onload = function() {
       if (xhr.status >= 200 && xhr.status < 400) {
-      var lines = xhr.responseText.replace(/\r/g, "").trim().split("\n");
+        // Clean carriage returns (\r) and split into lines
+        var rawText = xhr.responseText.replace(/\r/g, "");
+        var lines = rawText.split("\n");
       
-      if (lines.length > 1) {
         var targetStation = "Chek Lap Kok";
         var stationFound = false;
 
         for (var i = 1; i < lines.length; i++) {
+          if (!lines[i].trim()) continue;
+
           var cols = lines[i].split(",");
-          
+        
           if (cols.length >= 4) {
-            // Remove quotes surrounding string values
             var stationName = cols[0].replace(/"/g, "").trim();
             var windDir = cols[2].replace(/"/g, "").trim();
             var windSpeed = cols[3].replace(/"/g, "").trim();
@@ -1336,16 +1340,20 @@
           }
         }
 
-        // Fallback to first data row if Chek Lap Kok isn't found
-        if (!stationFound && lines[1]) {
-          var fallbackCols = lines[1].split(",");
-          if (fallbackCols.length >= 4) {
-            var fDir = fallbackCols[2].replace(/"/g, "").trim();
-            var fSpeed = fallbackCols[3].replace(/"/g, "").trim();
-            document.getElementById("cw-wind").textContent = fSpeed + ' km/h ' + fDir;
+        // Fallback to first available station row if Chek Lap Kok wasn't matched
+        if (!stationFound && lines.length > 1) {
+          for (var j = 1; j < lines.length; j++) {
+            var fbCols = lines[j].split(",");
+            if (fbCols.length >= 4) {
+              var fSpeed = fbCols[3].replace(/"/g, "").trim();
+              var fDir = fbCols[2].replace(/"/g, "").trim();
+              if (fSpeed && fDir) {
+                document.getElementById("cw-wind").textContent = fSpeed + ' km/h ' + fDir;
+                break;
+              }
+            }
           }
         }
-      }
       } else {
         document.getElementById("cw-wind").textContent = '-- km/h';
       }
