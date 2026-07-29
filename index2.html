@@ -1310,7 +1310,7 @@
 
     // Helper function to convert wind degrees (0-360) to direction text
     function getWindDirectionText(degree) {
-      var directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+      var directions = ['北', '東北', '東', '東南', '南' ,'西南', '西', '西北'];
       var index = Math.round(degree / 45) % 8;
       return directions[index];
     }
