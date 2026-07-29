@@ -1258,14 +1258,16 @@
 
     // HKO Emoji mapping
     function getHkoEmoji(code, desc) {
-      if (code === 50) return "☀️";
-      if (code >= 51 && code <= 52) return "⛅";
-      if (code >= 53 && code <= 54) return "🌦️";
-      if (code >= 60 && code <= 61) return "☁️";
-      if (code >= 62 && code <= 65) return "🌧️";
-      if (code >= 70 && code <= 77) return "🌩️";
-      if (code >= 80 && code <= 85) return "🌫️";
-      if (code >= 90 && code <= 93) return "🌀";
+    var numericCode = parseInt(code, 10);
+  
+      if (numericCode === 50) return "☀️";
+      if (numericCode >= 51 && numericCode <= 52) return "⛅";
+      if (numericCode >= 53 && numericCode <= 54) return "🌦️";
+      if (numericCode >= 60 && numericCode <= 61) return "☁️";
+      if (numericCode >= 62 && numericCode <= 65) return "🌧️";
+      if (numericCode >= 70 && numericCode <= 77) return "🌩️";
+      if (numericCode >= 80 && numericCode <= 85) return "🌫️";
+      if (numericCode >= 90 && numericCode <= 93) return "🌀";
 
       if (desc) {
         var lower = desc.toLowerCase();
@@ -1277,139 +1279,145 @@
       return "🌡️";
     }
 
-    // Fetch current weather
+    function fetchWindData() {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", WIND_URL, true);
+      xhr.onload = function() {
+      if (xhr.status >= 200 && xhr.status < 400) {
+        var lines = xhr.responseText.trim().split("\n");
+        if (lines.length > 1) {
+          var targetStation = "Chek Lap Kok";
+          var stationFound = false;
+
+          for (var i = 1; i < lines.length; i++) {
+            var cols = lines[i].split(",");
+            // CSV structure: Date/Time, Station Name, Wind Direction, Wind Speed (km/h)
+            if (cols.length >= 4 && cols[1].replace(/"/g, "").trim() === targetStation) {
+              var windDir = cols[2].replace(/"/g, "").trim();
+              var windSpeed = cols[3].replace(/"/g, "").trim();
+            
+              document.getElementById("cw-wind").textContent = windSpeed + ' km/h ' + windDir;
+              stationFound = true;
+              break;
+            }
+          }
+        
+          if (!stationFound && lines[1]) {
+            var fallbackCols = lines[1].split(",");
+            if (fallbackCols.length >= 4) {
+              document.getElementById("cw-wind").textContent = fallbackCols[3].replace(/"/g, "").trim() + ' km/h ' + fallbackCols[2].replace(/"/g, "").trim();
+            }
+          }
+        }
+      } else {
+        document.getElementById("cw-wind").textContent = '-- km/h';
+      }
+      };
+      xhr.onerror = function() {
+      document.getElementById("cw-wind").textContent = '-- km/h';
+      };
+      xhr.send();
+    }
+
     function fetchCurrentWeather() {
       var xhr = new XMLHttpRequest();
       xhr.open("GET", HKO_CURRENT_URL, true);
       xhr.onload = function() {
-        if (xhr.status >= 200 && xhr.status < 400) {
-          try {
-            var data = JSON.parse(xhr.responseText);
-            cachedCurrentWeather = data;
+      if (xhr.status >= 200 && xhr.status < 400) {
+        try {
+          var data = JSON.parse(xhr.responseText);
+          cachedCurrentWeather = data;
 
-            // Temperature
-            var tempData = data.temperature;
-            var temp = '--';
-            if (tempData && tempData.data && tempData.data.length > 0) {
-              // Find "King's Park" station (usually first or named)
-              for (var i = 0; i < tempData.data.length; i++) {
-                if (tempData.data[i].place === "Chek Lap Kok" || tempData.data[i].place.indexOf("King") !== -1) {
-                  temp = tempData.data[i].value;
-                  break;
-                }
-              }
-              if (temp === '--' && tempData.data[0]) {
-                temp = tempData.data[0].value;
+          // 1. Temperature
+          var tempData = data.temperature;
+          var temp = '--';
+          if (tempData && tempData.data && tempData.data.length > 0) {
+            for (var i = 0; i < tempData.data.length; i++) {
+              if (tempData.data[i].place && tempData.data[i].place.indexOf("Chek Lap Kok") !== -1) {
+                temp = tempData.data[i].value;
+                break;
               }
             }
-            document.getElementById("cw-temp").innerHTML = temp + '<span>°C</span>';
-
-            // Feels like (approximate using heat index formula for HK)
-            var humidity = '--';
-            if (data.humidity && data.humidity.data && data.humidity.data.length > 0) {
-              humidity = data.humidity.data[0].value;
+            if (temp === '--' && tempData.data[0]) {
+              temp = tempData.data[0].value;
             }
-            document.getElementById("cw-humidity").textContent = humidity + '%';
-
-            // Calculate feels like
-            if (temp !== '--' && humidity !== '--') {
-              var feelsLike;
-              if (temp > 27) {
-                // Heat index approximation
-                feelsLike = Math.round(temp + (humidity - 60) * 0.1);
-              } else if (temp < 15) {
-                // Wind chill approximation
-                feelsLike = Math.round(temp - 1);
-              } else {
-                feelsLike = temp;
-              }
-              document.getElementById("qi-feels-like").textContent = feelsLike + '°C';
-            }
-
-            // Weather icon & condition
-            var weatherIcon = "🌤️";
-            var condition = "Partly Cloudy";
-            if (data.icon && data.icon.length > 0) {
-              weatherIcon = getHkoEmoji(data.icon[0], "");
-            }
-            if (data.weatherMessage) {
-              condition = data.weatherMessage;
-            }
-            document.getElementById("cw-icon").textContent = weatherIcon;
-            document.getElementById("cw-condition").textContent = condition;
-
-            // Wind
-            function fetchWindData() {
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", WIND_URL, true);
-            xhr.onload = function() {
-              if (xhr.status >= 200 && xhr.status < 400) {
-                // Parse CSV lines
-                var lines = xhr.responseText.trim().split("\n");
-                if (lines.length > 1) {
-                  // Line 0 is header: Date, Station Name, Wind Direction, Wind Speed (km/h), Maximum Gust
-                  // Find a specific station, e.g., "Central" or "Kowloon City"
-                  var targetStation = "Chek Lap Kok"; // Change to your preferred station
-                  var stationFound = false;
-
-                  for (var i = 1; i < lines.length; i++) {
-                  var cols = lines[i].split(",");
-                    if (cols.length >= 4 && cols[1].trim() === targetStation) {
-                    var windDir = cols[2].trim();
-                    var windSpeed = cols[3].trim();
-                      
-                    document.getElementById("cw-wind").textContent = windSpeed + ' km/h ' + windDir;
-                    stationFound = true;
-                    break;
-                    }
-                  }
-                  // Fallback to first available station if target station isn't found
-                  if (!stationFound && lines[1]) {
-                    var cols = lines[1].split(",");
-                    document.getElementById("cw-wind").textContent = cols[3].trim() + ' km/h ' + cols[2].trim();
-                  }
-                }
-              } else {
-                document.getElementById("cw-wind").textContent = '-- km/h';
-              }
-            };
-            xhr.send();
-            }
-
-            // UV (from another endpoint if available)
-            if (data.uvindex && data.uvindex.data) {
-              var uvVal = data.uvindex.data.value || '--';
-              document.getElementById("cw-uv").textContent = uvVal;
-              var uvEl = document.getElementById("cw-uv");
-              if (uvVal <= 2) uvEl.className = 'cw-detail-value uv';
-              else if (uvVal <= 5) uvEl.className = 'cw-detail-value uv';
-              else if (uvVal <= 7) uvEl.className = 'cw-detail-value uv';
-              else uvEl.className = 'cw-detail-value uv';
-            }
-
-            // Rainfall
-            if (data.rainfall && data.rainfall.data) {
-              var totalRain = 0;
-              var list = data.rainfall.data;
-              for (var r = 0; r < list.length; r++) {
-                var val = 0;
-                if (list[r].data && list[r].data[0] && typeof list[r].data[0].max === 'number') {
-                  val = list[r].data[0].max;
-                } else if (typeof list[r].max === 'number') {
-                  val = list[r].max;
-                }
-                totalRain += val;
-              }
-              var avgRain = list.length > 0 ? (totalRain / list.length).toFixed(1) : '--';
-              document.getElementById("cw-rainfall").textContent = avgRain + ' mm';
-            }
-
-            updateLastUpdate();
-
-          } catch(e) {
-            document.getElementById("cw-condition").textContent = "Error parsing data";
           }
+          document.getElementById("cw-temp").innerHTML = temp + '<span>°C</span>';
+
+          // 2. Humidity & Feels Like
+          var humidity = '--';
+          if (data.humidity && data.humidity.data && data.humidity.data.length > 0) {
+          humidity = data.humidity.data[0].value;
+          }
+          document.getElementById("cw-humidity").textContent = humidity + '%';
+
+          if (temp !== '--' && humidity !== '--') {
+            var feelsLike;
+            if (temp > 27) {
+              feelsLike = Math.round(temp + (humidity - 60) * 0.1);
+            } else if (temp < 15) {
+              feelsLike = Math.round(temp - 1);
+            } else {
+              feelsLike = temp;
+            }
+            document.getElementById("qi-feels-like").textContent = feelsLike + '°C';
+          }
+
+          // 3. Weather Icon & Condition Text Fix
+          var weatherIcon = "🌤️";
+          var condition = "Mainly Fine";
+
+          if (data.icon && data.icon.length > 0) {
+            weatherIcon = getHkoEmoji(data.icon[0], "");
+          }
+        
+          // HKO API uses 'specialWxTips' or fallback to general warning/icon status
+          if (data.specialWxTips && data.specialWxTips.length > 0) {
+            condition = data.specialWxTips[0];
+          } else if (data.warningMessage && data.warningMessage.length > 0) {
+            condition = data.warningMessage[0];
+          } else if (data.icon && data.icon.length > 0) {
+            condition = "Icon Code: " + data.icon[0]; 
+          }
+        
+          document.getElementById("cw-icon").textContent = weatherIcon;
+          document.getElementById("cw-condition").textContent = condition;
+
+          // 4. UV Index Fix
+          if (data.uvindex && data.uvindex.data && data.uvindex.data.length > 0) {
+            var uvVal = data.uvindex.data[0].value || '--';
+            var uvEl = document.getElementById("cw-uv");
+            if (uvEl) {
+              uvEl.textContent = uvVal;
+            }
+          }
+
+          // 5. Rainfall
+          if (data.rainfall && data.rainfall.data) {
+            var totalRain = 0;
+            var list = data.rainfall.data;
+            for (var r = 0; r < list.length; r++) {
+              var val = 0;
+              if (list[r].max) {
+                val = list[r].max;
+              }
+              totalRain += val;
+            }
+            var avgRain = list.length > 0 ? (totalRain / list.length).toFixed(1) : '--';
+            document.getElementById("cw-rainfall").textContent = avgRain + ' mm';
+          }
+
+          // 6. Fetch Wind Data
+          fetchWindData();
+      
+          if (typeof updateLastUpdate === 'function') {
+            updateLastUpdate();
+          }
+
+        } catch(e) {
+          document.getElementById("cw-condition").textContent = "Error parsing data";
         }
+      }
       };
       xhr.onerror = function() {
         document.getElementById("cw-condition").textContent = "Network error";
