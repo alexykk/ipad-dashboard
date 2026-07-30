@@ -276,18 +276,7 @@
 
     /* Left Column */
     .left-column {
-      width: 58%;
-      display: -webkit-flex;
-      display: flex;
-      -webkit-flex-direction: column;
-      flex-direction: column;
-      gap: 10px;
-      min-height: 0;
-    }
-
-    /* Right Column */
-    .right-column {
-      width: 42%;
+      width: 100%;
       display: -webkit-flex;
       display: flex;
       -webkit-flex-direction: column;
@@ -431,6 +420,7 @@
     .cw-detail-value.wind { color: var(--accent-green); }
     .cw-detail-value.uv { color: var(--accent-amber); }
     .cw-detail-value.rainfall { color: var(--accent-blue); }
+    .cw-detail-value.info { color: var(--accent-blue); }
 
     /* Warning Banner */
     .warning-banner {
@@ -669,170 +659,6 @@
       font-weight: 600;
     }
 
-    /* Right side cards */
-    .world-clock-card {
-      -webkit-flex-shrink: 0;
-      flex-shrink: 0;
-    }
-
-    .world-clock-grid {
-      display: -webkit-flex;
-      display: flex;
-      -webkit-flex-wrap: wrap;
-      flex-wrap: wrap;
-      gap: 6px;
-      padding: 4px 14px 12px;
-    }
-
-    .world-clock-item {
-      -webkit-flex: 1 1 46%;
-      flex: 1 1 46%;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
-      padding: 8px 10px;
-      min-width: 0;
-    }
-
-    .wc-city {
-      font-size: 0.65rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-
-    .wc-time {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .wc-date {
-      font-size: 0.6rem;
-      color: var(--text-muted);
-    }
-
-    /* Quick Info Card */
-    .quick-info-card {
-      -webkit-flex-shrink: 0;
-      flex-shrink: 0;
-    }
-
-    .quick-info-grid {
-      display: -webkit-flex;
-      display: flex;
-      -webkit-flex-wrap: wrap;
-      flex-wrap: wrap;
-      gap: 6px;
-      padding: 4px 14px 12px;
-    }
-
-    .qi-item {
-      -webkit-flex: 1 1 46%;
-      flex: 1 1 46%;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
-      padding: 8px 10px;
-      min-width: 0;
-    }
-
-    .qi-label {
-      font-size: 0.6rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      display: -webkit-flex;
-      display: flex;
-      -webkit-align-items: center;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .qi-value {
-      font-size: 1rem;
-      font-weight: 700;
-      margin-top: 2px;
-    }
-
-    .qi-value.good { color: var(--accent-green); }
-    .qi-value.moderate { color: var(--accent-amber); }
-    .qi-value.poor { color: var(--accent-rose); }
-    .qi-value.info { color: var(--accent-blue); }
-
-    /* Tides / Sun Card */
-    .sun-card {
-      -webkit-flex-shrink: 0;
-      flex-shrink: 0;
-    }
-
-    .sun-body {
-      padding: 4px 14px 12px;
-    }
-
-    .sun-arc {
-      position: relative;
-      height: 60px;
-      margin-bottom: 8px;
-      overflow: hidden;
-    }
-
-    .sun-arc-path {
-      position: absolute;
-      bottom: 0;
-      left: 10%;
-      right: 10%;
-      height: 100%;
-      border: 2px dashed rgba(251, 191, 36, 0.2);
-      border-radius: 50% 50% 0 0;
-      border-bottom: none;
-    }
-
-    .sun-position {
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      background: var(--accent-amber);
-      border-radius: 50%;
-      box-shadow: 0 0 12px rgba(251, 191, 36, 0.5);
-      -webkit-transform: translate(-50%, 50%);
-      transform: translate(-50%, 50%);
-      -webkit-transition: all 1s ease;
-      transition: all 1s ease;
-    }
-
-    .sun-horizon {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .sun-times {
-      display: -webkit-flex;
-      display: flex;
-      -webkit-justify-content: space-between;
-      justify-content: space-between;
-    }
-
-    .sun-time-item {
-      text-align: center;
-    }
-
-    .sun-time-label {
-      font-size: 0.6rem;
-      color: var(--text-muted);
-    }
-
-    .sun-time-value {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--accent-amber);
-    }
-
     /* Loading & Error */
     .loading, .error {
       text-align: center;
@@ -987,11 +813,10 @@
                 <div class="cw-detail-label">💨 Wind</div>
                 <div class="cw-detail-value wind" id="cw-wind">-- km/h</div>
               </div>
-              <div class="qi-item">
-                <div class="qi-label">🌡️ Feels Like</div>
-                <div class="qi-value info" id="qi-feels-like">--°C</div>
+              <div class="cw-details">
+                <div class="cw-detail-label">🌡️ Feels Like</div>
+                <div class="cw-detail-value info" id="qi-feels-like">--°C</div>
               </div>
-
               <div class="cw-detail-item">
                 <div class="cw-detail-label">☀️ UV Index</div>
                 <div class="cw-detail-value uv" id="cw-uv">--</div>
@@ -1000,9 +825,9 @@
                 <div class="cw-detail-label">🌧️ Rainfall</div>
                 <div class="cw-detail-value rainfall" id="cw-rainfall">-- mm</div>
               </div>
-              <div class="qi-item">
-                <div class="qi-label">🌊 Tide</div>
-                <div class="qi-value info" id="qi-tide">--</div>
+              <div class="cw-details">
+                <div class="cw-detail-label">🌊 Tide</div>
+                <div class="cw-detail-value info" id="qi-tide">--</div>
               </div>
             </div>
           </div>
