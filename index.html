@@ -385,10 +385,10 @@
     .cw-details {
       -webkit-flex: 1;
       flex: 1;
-      display: -webkit-flex;
-      display: flex;
-      -webkit-flex-wrap: wrap;
-      flex-wrap: wrap;
+      display: -webkit-grid;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, auto);
       gap: 6px;
     }
 
@@ -396,10 +396,14 @@
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--card-border);
       border-radius: 8px;
-      padding: 6px 10px;
-      -webkit-flex: 1 1 45%;
-      flex: 1 1 45%;
+      padding: 6px 8px;
       min-width: 0;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      -webkit-justify-content: center;
+      justify-content: center;
     }
 
     .cw-detail-label {
