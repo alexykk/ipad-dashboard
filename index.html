@@ -1030,48 +1030,6 @@
       <!-- Right Column: Info Panels -->
       <div class="right-column">
 
-        <!-- Sun Position -->
-        <div class="card sun-card">
-          <div class="card-header">
-            <div class="card-title">
-              <span class="card-title-icon">🌅</span> Sun Position
-            </div>
-          </div>
-          <div class="sun-body">
-            <div class="sun-arc">
-              <div class="sun-arc-path"></div>
-              <div class="sun-position" id="sun-dot"></div>
-              <div class="sun-horizon"></div>
-            </div>
-            <div class="sun-times">
-              <div class="sun-time-item">
-                <div class="sun-time-label">🌅 Sunrise</div>
-                <div class="sun-time-value" id="sunrise-time">--:--</div>
-              </div>
-              <div class="sun-time-item">
-                <div class="sun-time-label">Day Length</div>
-                <div class="sun-time-value" id="day-length">--h --m</div>
-              </div>
-              <div class="sun-time-item">
-                <div class="sun-time-label">🌇 Sunset</div>
-                <div class="sun-time-value" id="sunset-time">--:--</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- World Clocks -->
-        <div class="card world-clock-card">
-          <div class="card-header">
-            <div class="card-title">
-              <span class="card-title-icon">🌍</span> World Clocks
-            </div>
-          </div>
-          <div class="world-clock-grid" id="world-clocks">
-            <!-- Populated by JS -->
-          </div>
-        </div>
-
         <!-- Quick Info -->
         <div class="card quick-info-card">
           <div class="card-header">
@@ -1098,7 +1056,7 @@
   </div>
 
 <script>
-  // Configuration URLs
+  // APIs
   var NEWS_RSS_URL = "https://rthk.hk/rthk/news/rss/c_expressnews_clocal.xml";
   var NEWS_API_URL = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(NEWS_RSS_URL);
   var HKO_CURRENT_URL = "https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=en";
@@ -1108,24 +1066,23 @@
 
   var DEFAULT_THUMBNAIL = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='55' viewBox='0 0 80 55'><rect width='100%' height='100%' fill='%23334155'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-size='12' font-family='sans-serif'>RTHK</text></svg>";
 
-  var cachedCurrentWeather = null;
-
-  // Safe DOM text updater
-  function setText(id, value) {
+  // Safe DOM helpers
+  function setText(id, val) {
     var el = document.getElementById(id);
-    if (el) el.textContent = value;
+    if (el) el.textContent = val;
   }
 
-  function setHtml(id, value) {
+  function setHtml(id, val) {
     var el = document.getElementById(id);
-    if (el) el.innerHTML = value;
+    if (el) el.innerHTML = val;
   }
 
-  // Greeting
-  function updateGreeting() {
-    var hour = new Date().getHours();
+  // Greeting & Clock
+  function updateGreetingAndClock() {
+    var now = new Date();
+    var hour = now.getHours();
+
     var msg, sub;
-
     if (hour >= 5 && hour < 12) {
       msg = "Good Morning ☀️";
       sub = "Have a great day ahead";
@@ -1141,127 +1098,24 @@
     }
     setText("greeting-text", msg);
     setText("greeting-sub", sub);
-  }
 
-  // Clock
-  function updateClock() {
-    var now = new Date();
-    var h = now.getHours();
-    var m = now.getMinutes();
-    var s = now.getSeconds();
+    var h = hour < 10 ? '0' + hour : hour;
+    var m = now.getMinutes() < 10 ? '0' + now.getMinutes() : now.getMinutes();
+    var s = now.getSeconds() < 10 ? '0' + now.getSeconds() : now.getSeconds();
 
-    setText("clock-time", (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m);
-    setText("clock-seconds", ':' + (s < 10 ? '0' : '') + s);
+    setText("clock-time", h + ':' + m);
+    setText("clock-seconds", ':' + s);
 
     var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     setText("clock-date", days[now.getDay()] + ", " + months[now.getMonth()] + " " + now.getDate() + " " + now.getFullYear());
   }
 
-  // Sun position calculation
-  function updateSunPosition() {
-    var now = new Date();
-    var dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
-    var sunriseHour = 6.5 - 0.75 * Math.cos((dayOfYear - 172) * 2 * Math.PI / 365);
-    var sunsetHour = 18.25 + 0.75 * Math.cos((dayOfYear - 172) * 2 * Math.PI / 365);
-
-    var sunriseH = Math.floor(sunriseHour);
-    var sunriseM = Math.round((sunriseHour - sunriseH) * 60);
-    var sunsetH = Math.floor(sunsetHour);
-    var sunsetM = Math.round((sunsetHour - sunsetH) * 60);
-
-    setText("sunrise-time", (sunriseH < 10 ? '0' : '') + sunriseH + ':' + (sunriseM < 10 ? '0' : '') + sunriseM);
-    setText("sunset-time", (sunsetH < 10 ? '0' : '') + sunsetH + ':' + (sunsetM < 10 ? '0' : '') + sunsetM);
-
-    var dayLenMinutes = Math.round((sunsetHour - sunriseHour) * 60);
-    var dayLenH = Math.floor(dayLenMinutes / 60);
-    var dayLenM = dayLenMinutes % 60;
-    setText("day-length", dayLenH + 'h ' + dayLenM + 'm');
-
-    var currentHour = now.getHours() + now.getMinutes() / 60;
-    var sunDot = document.getElementById("sun-dot");
-    if (!sunDot || !sunDot.parentElement) return;
-
-    var arcContainer = sunDot.parentElement;
-
-    if (currentHour >= sunriseHour && currentHour <= sunsetHour) {
-      var progress = (currentHour - sunriseHour) / (sunsetHour - sunriseHour);
-      var angle = Math.PI * (1 - progress);
-      var arcWidth = arcContainer.offsetWidth * 0.8;
-      var arcHeight = arcContainer.offsetHeight;
-      var cx = arcContainer.offsetWidth * 0.5;
-      var cy = arcContainer.offsetHeight;
-      var rx = arcWidth / 2;
-      var ry = arcHeight;
-
-      var x = cx + rx * Math.cos(angle);
-      var y = cy - ry * Math.sin(angle);
-
-      sunDot.style.left = x + 'px';
-      sunDot.style.top = y + 'px';
-      sunDot.style.display = 'block';
-      sunDot.style.background = 'var(--accent-amber)';
-      sunDot.style.boxShadow = '0 0 12px rgba(251, 191, 36, 0.6)';
-    } else {
-      sunDot.style.display = 'block';
-      sunDot.style.background = 'var(--text-muted)';
-      sunDot.style.boxShadow = '0 0 8px rgba(100, 116, 139, 0.3)';
-      if (currentHour < sunriseHour) {
-        sunDot.style.left = '10%';
-        sunDot.style.top = '95%';
-      } else {
-        sunDot.style.left = '90%';
-        sunDot.style.top = '95%';
-      }
-    }
-  }
-
-  // World Clocks
-  function updateWorldClocks() {
-    var cities = [
-      { name: "London", tz: "Europe/London", flag: "🇬🇧" },
-      { name: "New York", tz: "America/New_York", flag: "🇺🇸" },
-      { name: "Tokyo", tz: "Asia/Tokyo", flag: "🇯🇵" },
-      { name: "Sydney", tz: "Australia/Sydney", flag: "🇦🇺" }
-    ];
-
-    var container = document.getElementById("world-clocks");
-    if (!container) return;
-    container.innerHTML = '';
-
-    var now = new Date();
-
-    for (var i = 0; i < cities.length; i++) {
-      var city = cities[i];
-      var cityTime;
-      try {
-        cityTime = new Date(now.toLocaleString("en-US", { timeZone: city.tz }));
-      } catch(e) {
-        cityTime = now;
-      }
-
-      var h = cityTime.getHours();
-      var m = cityTime.getMinutes();
-      var timeStr = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
-      var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-      var dateStr = days[cityTime.getDay()];
-
-      var el = document.createElement("div");
-      el.className = "world-clock-item";
-      el.innerHTML =
-        '<div class="wc-city">' + city.flag + ' ' + city.name + '</div>' +
-        '<div class="wc-time">' + timeStr + '</div>' +
-        '<div class="wc-date">' + dateStr + '</div>';
-      container.appendChild(el);
-    }
-  }
-
-  // Weather Emoji Mapping
+  // HKO Emoji Mapping
   function getHkoEmoji(code, desc) {
     var c = parseInt(code, 10);
     if (c === 50) return "☀️";
-    if (c === 51 || c === 77) return "⛅";
-    if (c === 52 || c === 76) return "⛅";
+    if (c === 51 || c === 52 || c === 76 || c === 77) return "⛅";
     if (c >= 53 && c <= 54) return "🌦️";
     if (c === 60 || c === 61) return "☁️";
     if (c >= 62 && c <= 64) return "🌧️";
@@ -1315,8 +1169,7 @@
 
   function getWindDirectionText(degree) {
     var directions = ['北', '東北', '東', '東南', '南' ,'西南', '西', '西北'];
-    var index = Math.round(degree / 45) % 8;
-    return directions[index];
+    return directions[Math.round(degree / 45) % 8];
   }
 
   function fetchWindData() {
@@ -1328,16 +1181,13 @@
           var data = JSON.parse(xhr.responseText);
           if (data && data.current) {
             var speed = Math.round(data.current.wind_speed_10m);
-            var dirDegree = data.current.wind_direction_10m;
-            var direction = getWindDirectionText(dirDegree);
-            setText("cw-wind", speed + ' km/h ' + direction);
+            var dir = getWindDirectionText(data.current.wind_direction_10m);
+            setText("cw-wind", speed + ' km/h ' + dir);
+            return;
           }
-        } catch (e) {
-          setText("cw-wind", '-- km/h');
-        }
-      } else {
-        setText("cw-wind", '-- km/h');
+        } catch (e) {}
       }
+      setText("cw-wind", '-- km/h');
     };
     xhr.onerror = function() { setText("cw-wind", '-- km/h'); };
     xhr.send();
@@ -1350,72 +1200,63 @@
       if (xhr.status >= 200 && xhr.status < 400) {
         try {
           var data = JSON.parse(xhr.responseText);
-          cachedCurrentWeather = data;
 
-          var tempData = data.temperature;
+          // Temp
           var temp = '--';
-          if (tempData && tempData.data && tempData.data.length > 0) {
-            for (var i = 0; i < tempData.data.length; i++) {
-              if (tempData.data[i].place && tempData.data[i].place.indexOf("Chek Lap Kok") !== -1) {
-                temp = tempData.data[i].value;
+          if (data.temperature && data.temperature.data) {
+            var list = data.temperature.data;
+            for (var i = 0; i < list.length; i++) {
+              if (list[i].place && list[i].place.indexOf("Chek Lap Kok") !== -1) {
+                temp = list[i].value;
                 break;
               }
             }
-            if (temp === '--' && tempData.data[0]) {
-              temp = tempData.data[0].value;
-            }
+            if (temp === '--' && list[0]) temp = list[0].value;
           }
           setHtml("cw-temp", temp + '<span>°C</span>');
 
+          // Humidity & Feels Like
           var humidity = '--';
-          if (data.humidity && data.humidity.data && data.humidity.data.length > 0) {
+          if (data.humidity && data.humidity.data && data.humidity.data[0]) {
             humidity = data.humidity.data[0].value;
           }
           setText("cw-humidity", humidity + '%');
 
           if (temp !== '--' && humidity !== '--') {
-            var feelsLike;
-            if (temp > 27) {
-              feelsLike = Math.round(temp + (humidity - 60) * 0.1);
-            } else if (temp < 15) {
-              feelsLike = Math.round(temp - 1);
-            } else {
-              feelsLike = temp;
-            }
+            var feelsLike = temp > 27 ? Math.round(temp + (humidity - 60) * 0.1) : (temp < 15 ? Math.round(temp - 1) : temp);
             setText("qi-feels-like", feelsLike + '°C');
           }
 
-          var weatherIcon = "🌤️";
-          var condition = "Partly Cloudy";
+          // Icon & Condition
           if (data.icon && data.icon.length > 0) {
-            weatherIcon = getHkoEmoji(data.icon[0], "");
-            condition = getHkoConditionText(data.icon[0]); 
+            setText("cw-icon", getHkoEmoji(data.icon[0], ""));
+            setText("cw-condition", getHkoConditionText(data.icon[0]));
           }
-          setText("cw-icon", weatherIcon);
-          setText("cw-condition", condition);
 
-          if (data.uvindex && data.uvindex.data && data.uvindex.data.length > 0) {
+          // UV
+          if (data.uvindex && data.uvindex.data && data.uvindex.data[0]) {
             setText("cw-uv", data.uvindex.data[0].value || '--');
           }
 
+          // Rainfall
           if (data.rainfall && data.rainfall.data) {
             var totalRain = 0;
-            var list = data.rainfall.data;
-            for (var r = 0; r < list.length; r++) {
-              totalRain += list[r].max || 0;
+            var rList = data.rainfall.data;
+            for (var r = 0; r < rList.length; r++) {
+              totalRain += rList[r].max || 0;
             }
-            var avgRain = list.length > 0 ? (totalRain / list.length).toFixed(1) : '--';
+            var avgRain = rList.length > 0 ? (totalRain / rList.length).toFixed(1) : '--';
             setText("cw-rainfall", avgRain + ' mm');
           }
 
           fetchWindData();
           updateLastUpdate();
         } catch(e) {
-          setText("cw-condition", "Error parsing data");
+          setText("cw-condition", "Error");
         }
       }
     };
-    xhr.onerror = function() { setText("cw-condition", "Network error"); };
+    xhr.onerror = function() { setText("cw-condition", "Offline"); };
     xhr.send();
   }
 
@@ -1459,13 +1300,9 @@
         try {
           var data = JSON.parse(xhr.responseText);
           var forecastList = data.weatherForecast;
+          if (!forecastList) return;
 
-          if (!forecastList || forecastList.length === 0) {
-            forecastEl.innerHTML = '<div class="error">No forecast data.</div>';
-            return;
-          }
-
-          forecastEl.innerHTML = '';
+          var html = '';
           var count = Math.min(9, forecastList.length);
 
           for (var i = 0; i < count; i++) {
@@ -1474,61 +1311,35 @@
             var monthDay = parseInt(dateStr.substring(4, 6), 10) + '/' + parseInt(dateStr.substring(6, 8), 10);
             var shortDay = (item.week || "").substring(0, 3);
 
-            var card = document.createElement("div");
-            card.className = "day-card";
-            card.innerHTML =
-              '<div class="day-name">' + shortDay + '</div>' +
-              '<div class="day-date">' + monthDay + '</div>' +
-              '<div class="weather-icon" title="' + (item.forecastWeather || '') + '">' + getHkoEmoji(item.ForecastIcon, item.forecastWeather) + '</div>' +
-              '<div class="temp-range">' +
-                '<span class="temp-max">' + item.forecastMaxtemp.value + '°</span>' +
-                '<span class="temp-min">' + item.forecastMintemp.value + '°</span>' +
-              '</div>' +
-              '<div class="humidity-badge">💧' + item.forecastMinrh.value + '-' + item.forecastMaxrh.value + '%</div>';
-
-            forecastEl.appendChild(card);
+            html += '<div class="day-card">' +
+                      '<div class="day-name">' + shortDay + '</div>' +
+                      '<div class="day-date">' + monthDay + '</div>' +
+                      '<div class="weather-icon" title="' + (item.forecastWeather || '') + '">' + getHkoEmoji(item.ForecastIcon, item.forecastWeather) + '</div>' +
+                      '<div class="temp-range">' +
+                        '<span class="temp-max">' + item.forecastMaxtemp.value + '°</span>' +
+                        '<span class="temp-min">' + item.forecastMintemp.value + '°</span>' +
+                      '</div>' +
+                      '<div class="humidity-badge">💧' + item.forecastMinrh.value + '-' + item.forecastMaxrh.value + '%</div>' +
+                    '</div>';
           }
-        } catch(e) {
-          forecastEl.innerHTML = '<div class="error">Error processing data.</div>';
-        }
-      } else {
-        forecastEl.innerHTML = '<div class="error">Error loading forecast.</div>';
+          forecastEl.innerHTML = html;
+        } catch(e) {}
       }
     };
-    xhr.onerror = function() { forecastEl.innerHTML = '<div class="error">Network error.</div>'; };
     xhr.send();
   }
 
-  function decodeHtml(html) {
-    var txt = document.createElement("textarea");
-    txt.innerHTML = html;
-    return txt.value;
-  }
-
   function getThumbnailUrl(item) {
-    if (item.thumbnail && typeof item.thumbnail === 'string' && item.thumbnail.length > 5) return item.thumbnail;
+    if (item.thumbnail && item.thumbnail.length > 5) return item.thumbnail;
     if (item.enclosure && item.enclosure.link) return item.enclosure.link;
-    if (item.media && item.media.content && item.media.content.url) return item.media.content.url;
 
     var rawHtml = (item.content || "") + " " + (item.description || "");
-    var decodedHtml = decodeHtml(rawHtml);
-    var match = decodedHtml.match(/<img[^>]+src=["']([^"']+)["']/i);
+    var match = rawHtml.match(/<img[^>]+src=["']([^"']+)["']/i);
     if (match && match[1]) {
       var url = match[1];
       return url.indexOf("http://") === 0 ? "https://" + url.substring(7) : url;
     }
     return DEFAULT_THUMBNAIL;
-  }
-
-  function safeParseDate(dateStr) {
-    if (!dateStr) return new Date();
-    // Reformat YYYY-MM-DD to YYYY/MM/DD for legacy WebKit string parsing stability
-    var cleanStr = dateStr.replace(/-/g, '/');
-    if (!cleanStr.includes('GMT') && !cleanStr.includes('+') && !cleanStr.includes('Z')) {
-      cleanStr += ' GMT';
-    }
-    var d = new Date(cleanStr);
-    return isNaN(d.getTime()) ? new Date() : d;
   }
 
   function fetchNewsFeed() {
@@ -1541,73 +1352,42 @@
       if (xhr.status >= 200 && xhr.status < 400) {
         try {
           var data = JSON.parse(xhr.responseText);
-          if (!data.items || data.items.length === 0) {
-            newsListEl.innerHTML = '<div class="error">No news available.</div>';
-            return;
-          }
+          if (!data.items || data.items.length === 0) return;
 
-          newsListEl.innerHTML = '';
-          var items = data.items.slice(0, 15);
+          var items = data.items.slice(0, 10); // Reduced to 10 articles to save RAM
           setText("news-count", items.length + ' articles');
 
           var now = new Date();
+          var html = '';
+
           for (var i = 0; i < items.length; i++) {
             var item = items[i];
-            var pubDate = safeParseDate(item.pubDate);
+            var pubDate = new Date(item.pubDate.replace(/-/g, '/'));
             var diffMins = Math.floor((now - pubDate) / 60000);
 
-            var timeAgo;
-            if (diffMins < 1) timeAgo = "Just now";
-            else if (diffMins < 60) timeAgo = diffMins + 'm ago';
-            else if (diffMins < 1440) timeAgo = Math.floor(diffMins / 60) + 'h ago';
-            else timeAgo = Math.floor(diffMins / 1440) + 'd ago';
-
+            var timeAgo = diffMins < 1 ? "Just now" : (diffMins < 60 ? diffMins + 'm ago' : (diffMins < 1440 ? Math.floor(diffMins / 60) + 'h ago' : Math.floor(diffMins / 1440) + 'd ago'));
             var imgUrl = getThumbnailUrl(item);
-            var newsCard = document.createElement("a");
-            newsCard.className = "news-item";
-            newsCard.href = item.link;
-            newsCard.target = "_blank";
-            newsCard.rel = "noopener noreferrer";
 
-            newsCard.innerHTML =
-              '<img class="news-thumbnail" src="' + imgUrl + '" alt="" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=\'' + DEFAULT_THUMBNAIL + '\';">' +
-              '<div class="news-content">' +
-                '<div class="news-item-title">' + item.title + '</div>' +
-                '<div class="news-item-meta">' + timeAgo + '</div>' +
-              '</div>';
-
-            newsListEl.appendChild(newsCard);
+            html += '<a class="news-item" href="' + item.link + '" target="_blank" rel="noopener noreferrer">' +
+                      '<img class="news-thumbnail" src="' + imgUrl + '" alt="" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src=\'' + DEFAULT_THUMBNAIL + '\';">' +
+                      '<div class="news-content">' +
+                        '<div class="news-item-title">' + item.title + '</div>' +
+                        '<div class="news-item-meta">' + timeAgo + '</div>' +
+                      '</div>' +
+                    '</a>';
           }
-        } catch(e) {
-          newsListEl.innerHTML = '<div class="error">Error processing news.</div>';
-        }
-      } else {
-        newsListEl.innerHTML = '<div class="error">Unable to load news.</div>';
+          newsListEl.innerHTML = html;
+        } catch(e) {}
       }
     };
-    xhr.onerror = function() { newsListEl.innerHTML = '<div class="error">Network error.</div>'; };
     xhr.send();
   }
 
   function updateLastUpdate() {
     var now = new Date();
-    var h = now.getHours();
-    var m = now.getMinutes();
-    setText("last-update", "Updated: " + (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m);
-  }
-
-  function refreshAll() {
-    var btn = document.getElementById("refresh-btn");
-    if (btn) btn.className = "refresh-btn spinning";
-
-    fetchCurrentWeather();
-    fetchHkoWarnings();
-    fetchForecast();
-    fetchNewsFeed();
-
-    setTimeout(function() {
-      if (btn) btn.className = "refresh-btn";
-    }, 1500);
+    var h = now.getHours() < 10 ? '0' + now.getHours() : now.getHours();
+    var m = now.getMinutes() < 10 ? '0' + now.getMinutes() : now.getMinutes();
+    setText("last-update", "Updated: " + h + ':' + m);
   }
 
   function updateTideInfo() {
@@ -1615,47 +1395,37 @@
     var hour = now.getHours() + now.getMinutes() / 60;
     var tidePhase = (hour % 12.42) / 12.42 * 2 * Math.PI;
     var tideHeight = Math.cos(tidePhase);
-    var tideStatus;
 
-    if (tideHeight > 0.3) tideStatus = "High 🌊";
-    else if (tideHeight < -0.3) tideStatus = "Low 🏖️";
-    else if (Math.sin(tidePhase) > 0) tideStatus = "Rising ↑";
-    else tideStatus = "Falling ↓";
-
+    var tideStatus = tideHeight > 0.3 ? "High 🌊" : (tideHeight < -0.3 ? "Low 🏖️" : (Math.sin(tidePhase) > 0 ? "Rising ↑" : "Falling ↓"));
     setText("qi-tide", tideStatus);
   }
 
-  function init() {
-    updateGreeting();
-    updateClock();
-    updateSunPosition();
-    updateWorldClocks();
-    updateTideInfo();
-
+  function refreshAll() {
     fetchCurrentWeather();
     fetchHkoWarnings();
     fetchForecast();
     fetchNewsFeed();
+  }
 
-    setInterval(function() {
-      updateClock();
-      updateGreeting();
-    }, 1000);
+  function init() {
+    updateGreetingAndClock();
+    updateTideInfo();
+    refreshAll();
 
-    setInterval(updateSunPosition, 60000);
-    setInterval(updateWorldClocks, 30000);
+    // Clock updates every 5s instead of 1s to reduce CPU wakeups
+    setInterval(updateGreetingAndClock, 5000);
     setInterval(updateTideInfo, 300000);
 
+    // Auto-refresh feeds
     setInterval(function() {
       fetchCurrentWeather();
       fetchHkoWarnings();
-    }, 10 * 60 * 1000);
+    }, 10 * 60 * 1000); // 10 minutes
 
-    setInterval(fetchForecast, 30 * 60 * 1000);
-    setInterval(fetchNewsFeed, 8 * 60 * 1000);
+    setInterval(fetchForecast, 30 * 60 * 1000); // 30 minutes
+    setInterval(fetchNewsFeed, 15 * 60 * 1000); // Relaxed to 15 minutes
   }
 
-  // Safe DOM Load execution
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
